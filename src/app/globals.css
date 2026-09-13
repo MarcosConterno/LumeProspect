@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafaf8;
+  --foreground: #16181d;
+  --surface: #ffffff;
+  --ink-soft: #5b5f66;
+  --ink-faint: #9599a1;
+  --border: #e7e5e0;
+  --border-soft: #f1efea;
+  --accent: #2f7d62;
+  --accent-dark: #1f5b47;
+  --accent-soft: #eaf3ee;
+  --amber: #b8862e;
+  --coral: #b8503e;
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-plex-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), sans-serif;
+  font-size: 14.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-fraunces), serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.score-badge {
+  display: flex;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  font-family: var(--font-fraunces), serif;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.score-alto { color: var(--accent-dark); }
+.score-medio { color: var(--amber); }
+.score-baixo { color: var(--coral); }
+
+.potential-tag {
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.potential-alto { background: var(--accent-soft); color: var(--accent-dark); }
+.potential-medio { background: #fbf3e1; color: var(--amber); }
+.potential-baixo { background: #fbebe7; color: var(--coral); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
