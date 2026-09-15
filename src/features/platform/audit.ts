@@ -3,6 +3,7 @@ const tables:Record<string,string>={workspaces:"Dados da empresa",workspace_memb
 const productNames:Record<string,string>={crm:"CRM",financeiro:"Financeiro",agenda:"Agenda",prospeccao:"Prospecção"};
 const verbs:Record<string,string>={insert:"cadastrado",update:"atualizado",delete:"removido"};
 export function auditDescription(event:string,details:Json) {
+  if(event === "user.assigned_by_master") return "Usuário vinculado à empresa pelo master";
   const fixed:Record<string,string>={"master.granted":"Acesso master concedido","master.revoked":"Acesso master revogado","master.entered_workspace":"Master acessou este ambiente"};
   if(fixed[event]) return fixed[event];
   const [table,operation]=event.split(".");

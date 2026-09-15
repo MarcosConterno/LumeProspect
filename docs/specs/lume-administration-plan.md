@@ -1,5 +1,7 @@
 # Administração Lume
 
+> Retomada em 15/09/2026: [criação e vínculo de contas pelo master](master-user-access.md). A ação existente foi conectada à tela do cliente; validação da nova entrega pendente.
+
 Decisão: usuário comum pertence a uma empresa. Masters pertencem à Lume e acessam clientes sem criar vínculos adicionais. A empresa interna existente e o usuário confirmado informado serão preservados.
 
 Clientes são provisionados pela Lume, com módulos individuais (CRM, financeiro, agenda e prospecção) e convite para o primeiro administrador. Administradores gerenciam usuários e permissões da própria empresa. Convites são links manuais, sem envio automático de e-mail pelo agente.
