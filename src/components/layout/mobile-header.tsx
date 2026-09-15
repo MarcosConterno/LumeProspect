@@ -1,22 +1,20 @@
+"use client";
 import Link from "next/link";
-import { navigation } from "@/components/layout/navigation";
+import { usePathname } from "next/navigation";
+import { Brand } from "@/components/ui/brand";
+import { NavIcon } from "./nav-icon";
+import { filteredNavigation, platformNavigation } from "./navigation";
 
-export function MobileHeader() {
-  return (
-    <header className="border-b border-[var(--border-soft)] px-5 py-4 lg:hidden">
-      <details className="group">
-        <summary className="flex cursor-pointer list-none items-center justify-between font-display text-base [&::-webkit-details-marker]:hidden">
-          <Link href="/dashboard">Lume Prospect</Link>
-          <span aria-hidden="true" className="font-sans text-lg text-[var(--ink-soft)] group-open:rotate-45 transition-transform">+</span>
-        </summary>
-        <nav aria-label="Navegação mobile" className="mt-4 grid grid-cols-2 gap-1 border-t border-[var(--border-soft)] pt-3">
-          {navigation.map(([label, href]) => (
-            <Link key={href} href={href} className="rounded-md px-3 py-2 text-sm text-[var(--ink-soft)] hover:bg-[var(--accent-soft)] hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent">
-              {label}
-            </Link>
-          ))}
-        </nav>
-      </details>
-    </header>
-  );
+export function MobileHeader({allowedModules,area="workspace"}:{allowedModules:string[];area?:"workspace"|"platform"}) {
+  const pathname=usePathname();
+  const items=area==="platform"?platformNavigation:filteredNavigation(allowedModules);
+  return <header className="mobile-header">
+    <Brand href={area==="platform"?"/lume":"/dashboard"}/>
+    <details key={pathname} className="mobile-menu">
+      <summary aria-label="Abrir ou fechar menu"><span aria-hidden="true">☰</span><span>Menu</span></summary>
+      <nav aria-label="Navegação mobile">
+        {items.map(([label,href,icon])=><Link key={href} href={href} aria-current={pathname===href||pathname.startsWith(href+"/")&&href!=="/lume"?"page":undefined} onClick={event=>event.currentTarget.closest("details")?.removeAttribute("open")}><NavIcon name={icon}/><span>{label}</span></Link>)}
+      </nav>
+    </details>
+  </header>;
 }

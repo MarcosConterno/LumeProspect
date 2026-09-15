@@ -1,8 +1,12 @@
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { notFound } from "next/navigation";
+import { ProspectDetail } from "@/features/prospects/components/prospect-detail";
+import { prospectRecords } from "@/features/prospects/mocks/prospects";
 
 type ProspectDetailPageProps = { params: Promise<{ id: string }> };
 
 export default async function ProspectDetailPage({ params }: ProspectDetailPageProps) {
   const { id } = await params;
-  return <PagePlaceholder eyebrow={`Prospect ${id}`} title="Detalhe do prospect" description="Perfil, score, contexto e ações comerciais do prospect selecionado." />;
+  const prospect = prospectRecords.find((item) => item.id === Number(id));
+  if (!prospect) notFound();
+  return <ProspectDetail prospect={prospect} />;
 }

@@ -1,5 +1,5 @@
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { CrmWorkspace } from "@/features/crm/components/crm-workspace";
 
 export default function CrmPage() {
-  return <PagePlaceholder title="CRM" description="Pipeline e relacionamento comercial em um só lugar." />;
+  return <CrmWorkspace />;
 }
