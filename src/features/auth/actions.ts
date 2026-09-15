@@ -3,6 +3,8 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "./context";
+import { invitationDestination, validInvite } from "./links";
+import { authErrorMessage } from "./errors";
 export type ActionState = { error?: string; message?: string; link?: string };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function origin() {
@@ -14,9 +16,10 @@ async function origin() {
 export async function authenticate(mode: string, _previous: ActionState, form: FormData): Promise<ActionState> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
+  const invite=validInvite(form.get("invite"));
   const db = await createClient();
   if (mode !== "password" && !emailPattern.test(email)) return { error: "Informe um e-mail válido." };
-  if (mode !== "recover" && (password.length < (mode === "login" ? 1 : 8) || password.length > 128)) return { error: "Use uma senha com 8 a 128 caracteres." };
+  if (!["recover","resend"].includes(mode) && (password.length < (mode === "login" ? 1 : 8) || password.length > 128)) return { error: "Use uma senha com 8 a 128 caracteres." };
   if (mode === "login") {
     const { error } = await db.auth.signInWithPassword({ email, password });
     if (error) return { error: error.code === "email_not_confirmed" ? "Confirme seu e-mail antes de entrar." : "Não foi possível entrar. Confira o e-mail e a senha e tente novamente." };
@@ -25,14 +28,26 @@ export async function authenticate(mode: string, _previous: ActionState, form: F
     if (name.length < 2 || name.length > 120) return { error: "Informe seu nome (2 a 120 caracteres)." };
     let site: string;
     try { site = await origin(); } catch (e) { return { error: (e as Error).message }; }
-    const { data, error } = await db.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: `${site}/auth/callback` } });
-    if (error) return { error: "Não foi possível cadastrar. Tente novamente em alguns minutos ou use a recuperação de senha." };
+    const callback=new URL("/auth/callback",site);
+    callback.searchParams.set("next",invitationDestination(invite));
+    const { data, error } = await db.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: callback.href } });
+    if (error) return { error: authErrorMessage(error,"Não foi possível cadastrar. Tente novamente em alguns minutos ou use a recuperação de senha.") };
     if (!data.session) return { message: "Confira seu e-mail para confirmar o cadastro. Se já possui conta, entre ou recupere sua senha." };
+  } else if (mode === "resend") {
+    let site:string;
+    try {site=await origin();} catch(error) {return {error:(error as Error).message};}
+    const callback=new URL("/auth/callback",site);
+    callback.searchParams.set("next",invitationDestination(invite));
+    const {error}=await db.auth.resend({type:"signup",email,options:{emailRedirectTo:callback.href}});
+    if(error) return {error:authErrorMessage(error,"Não foi possível reenviar a confirmação agora. Aguarde e tente novamente.")};
+    return {message:"Se este cadastro aguarda confirmação, você receberá um novo e-mail. Confira também o spam."};
   } else if (mode === "recover") {
     let site: string;
     try { site = await origin(); } catch (e) { return { error: (e as Error).message }; }
-    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: `${site}/auth/callback?next=/redefinir-senha` });
-    if (error) return { error: "Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos." };
+    const callback=new URL("/auth/callback",site);
+    callback.searchParams.set("next","/redefinir-senha"+(invite ? "?invite="+invite : ""));
+    const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: callback.href });
+    if (error) return { error: authErrorMessage(error,"Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos.") };
     return { message: "Se houver uma conta com esse e-mail, você receberá um link para redefinir sua senha." };
   } else if (mode === "password") {
     await requireUser();
@@ -41,10 +56,9 @@ export async function authenticate(mode: string, _previous: ActionState, form: F
     if (error) return { error: "Não foi possível alterar a senha. Solicite um novo link ou escolha outra senha." };
     const result = await db.auth.signOut();
     if (result.error) return { message: "Senha alterada. Saia da conta e entre novamente." };
-    redirect("/login?updated=1");
+    redirect("/login?updated=1"+(invite ? "&invite="+invite : ""));
   } else return { error: "Operação inválida." };
-  const token = String(form.get("invite") ?? "");
-  if (/^[a-f0-9]{64}$/.test(token)) redirect(`/convite/${token}`);
+  if (invite) redirect(`/convite/${invite}`);
   redirect("/onboarding");
 }
 export async function signOut() {

@@ -25,7 +25,7 @@ O diagnóstico e os critérios de conclusão estão em [docs/specs/project-audit
 | Tela CRM | Protótipo com mocks e alterações em memória |
 | Camada de dados do CRM | Em implementação; ações e repositório escritos, ainda sem conexão com a tela |
 | Notas e arquivos | Tabelas e bucket privado criados online; interface e testes de upload real pendentes |
-| Financeiro | Implementação com dados reais; revisão realizada, testes SQL e homologação pendentes. Consulte [ordem de aplicação e validação](docs/specs/finance-implementation.md) |
+| Financeiro | Dados reais; busca por período, cliente, categoria e valor e relatório para PDF escritos. [Nova migration e validação pendentes](docs/specs/finance-search-reports.md) |
 | Agenda | Página de estrutura inicial |
 | Dashboard | Contagens reais de cadastros e equipe |
 | Prospects | Demonstração; desenvolvimento adiado |

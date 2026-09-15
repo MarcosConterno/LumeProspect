@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { validInvite } from "@/features/auth/links";
 
 export default async function AuthLinkErrorPage({ searchParams }: {
-  searchParams: Promise<{ reason?: string; flow?: string }>;
+  searchParams: Promise<{ reason?: string; flow?: string; invite?:string }>;
 }) {
   const params = await searchParams;
   const recovery = params.flow === "recovery";
   const expired = params.reason === "expired";
+  const invite=validInvite(params.invite);
+  const suffix=invite ? "?invite="+invite : "";
 
   return (
     <main className="mx-auto max-w-lg space-y-6 px-6 py-16">
@@ -24,10 +27,10 @@ export default async function AuthLinkErrorPage({ searchParams }: {
         </p>
       )}
       <div className="flex flex-wrap gap-3">
-        <Link href={recovery ? "/recuperar-senha" : "/login"} className="rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-white">
+        <Link href={(recovery ? "/recuperar-senha" : "/login")+suffix} className="rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-white">
           {recovery ? "Solicitar novo link" : "Entrar com e-mail e senha"}
         </Link>
-        {!recovery && <Link href="/recuperar-senha" className="rounded-lg border border-border px-4 py-3 text-sm">Recuperar senha</Link>}
+        {!recovery && <Link href={"/reenviar-confirmacao"+suffix} className="rounded-lg border border-border px-4 py-3 text-sm">Reenviar confirmação</Link>}
       </div>
     </main>
   );

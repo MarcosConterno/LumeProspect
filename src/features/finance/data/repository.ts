@@ -1,7 +1,7 @@
 import "server-only";
 import { requireWorkspace } from "@/features/auth/context";
 import { uuid, validateFilters } from "./validation";
-import type { FinanceFilters, FinanceSnapshot, FinanceDetail, CompanyChoice } from "../types";
+import type { FinanceFilters, FinanceSnapshot, FinanceDetail, CompanyChoice, FinanceSearch } from "../types";
 import type { Json } from "@/types/database";
 
 export function financeError(error: {code?: string;message?: string}|null) {
@@ -39,9 +39,29 @@ function requiredJson<T>(data: Json | null): T {
 }
 export async function loadFinance(workspace: string, filters: FinanceFilters) {
   const {db}=await financeContext(workspace);
-  const result=await db.rpc("finance_snapshot",{target:workspace,filters:validateFilters(filters)});
+  const checked = validateFilters(filters);
+  const [result,search] = await Promise.all([
+    db.rpc("finance_snapshot",{target:workspace,filters:{month:checked.month,type:"all",status:"all",query:"",page:1}}),
+    db.rpc("finance_search_entries",{target:workspace,filters:{...checked}}),
+  ]);
   financeError(result.error);
-  return requiredJson<FinanceSnapshot>(result.data);
+  financeSearchError(search.error);
+  const matches = requiredJson<FinanceSearch>(search.data);
+  return {...requiredJson<Omit<FinanceSnapshot,"search">>(result.data),entries:matches.entries,count:matches.count,page:matches.page,search:matches};
+}
+
+function financeSearchError(error: {code?:string;message?:string}|null) {
+  if(error && ["PGRST202","42883"].includes(error.code ?? "")) throw new Error("A busca financeira precisa da atualização 20260915120000_finance_search_reports.sql no Supabase.");
+  if(error?.message?.includes("Report limit exceeded")) throw new Error("O relatório ultrapassa 5.000 lançamentos. Reduza o período ou refine os filtros para imprimir todos os resultados.");
+  financeError(error);
+}
+
+export async function loadFinanceReport(workspace: string, filters: FinanceFilters) {
+  const {db,active}=await financeContext(workspace);
+  const checked=validateFilters(filters);
+  const result=await db.rpc("finance_search_entries",{target:workspace,filters:{...checked},export_all:true});
+  financeSearchError(result.error);
+  return {companyName:active.workspaces.name,filters:checked,search:requiredJson<FinanceSearch>(result.data),issuedAt:new Date().toISOString()};
 }
 export async function loadFinanceDetail(workspace: string,id: string) {
   const {db}=await financeContext(workspace);

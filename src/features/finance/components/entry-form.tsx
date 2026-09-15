@@ -5,6 +5,7 @@ import { parseAmount } from "../data/validation";
 import { amountInput } from "../format";
 import type { CompanyChoice, FinanceCategory, FinanceEntry, FinanceKind } from "../types";
 import { CompanySearch } from "./company-search";
+import { CategorySelect } from "./category-select";
 
 export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{workspace:string;categories:FinanceCategory[];today:string;entry?:FinanceEntry;onSaved:()=>void;onClose:()=>void}) {
   const [kind,setKind] = useState<FinanceKind>(entry?.type ?? "receivable");
@@ -21,6 +22,7 @@ export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{wo
     setError("");setPending(true);
     try {
       if(!company) throw new Error("Selecione uma pessoa ou empresa nos resultados da busca.");
+      if(!category) throw new Error("Selecione uma categoria na lista.");
       requestId.current ||= crypto.randomUUID();
       const result = await saveFinanceEntry(workspace,{id:requestId.current,version:original?.version,type:kind,companyId:company.id,categoryId:category,
         description:String(form.get("description")),dueDate:String(form.get("date")),amountCents:locked ? original!.amountCents : parseAmount(String(form.get("amount"))),notes:String(form.get("notes"))});
@@ -35,7 +37,8 @@ export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{wo
     <label>Vencimento<input type="date" name="date" required min="1900-01-01" max="2100-12-31" defaultValue={original?.dueDate ?? today}/></label>
     <label className="finance-wide">Descrição<input name="description" required minLength={2} maxLength={160} defaultValue={original?.description}/></label>
     <CompanySearch workspace={workspace} value={company} onChange={setCompany} disabled={locked}/>
-    <label>Categoria<select required disabled={locked} value={category} onChange={e=>setCategory(e.target.value)}><option value="">Selecione</option>{categories.filter(c=>c.kind===kind && (c.active || c.id===original?.categoryId)).map(c=><option key={c.id} value={c.id}>{c.name}{!c.active ? " (inativa)" : ""}</option>)}</select></label>
+    <CategorySelect key={kind} required disabled={locked || pending} value={category} onChange={setCategory}
+      categories={categories.filter(c=>c.kind===kind && (c.active || c.id===original?.categoryId))}/>
     <label>Valor (R$)<input name="amount" inputMode="decimal" required disabled={locked} defaultValue={original ? amountInput(original.amountCents) : ""} placeholder="0,00"/></label>
     <label className="finance-wide">Observações<textarea name="notes" maxLength={4000} rows={3} defaultValue={original?.notes}/></label>
     {error && <p role="alert" className="finance-wide finance-coral">{error}</p>}

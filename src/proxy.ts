@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
     },
   });
   const { data: { user } } = await db.auth.getUser();
-  const protectedRoute = /^\/(lume|dashboard|clientes|contatos|perfil|crm|equipe|prospects|buscar|agenda|favoritos|financeiro|servicos|configuracoes|onboarding|redefinir-senha)(\/|$)/.test(request.nextUrl.pathname);
+  const protectedRoute = /^\/(lume|dashboard|clientes|contatos|perfil|crm|equipe|prospects|buscar|agenda|favoritos|financeiro|relatorios|servicos|configuracoes|onboarding|redefinir-senha)(\/|$)/.test(request.nextUrl.pathname);
   if (!user && protectedRoute) {
     const destination = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.getAll().forEach((cookie) => destination.cookies.set(cookie));

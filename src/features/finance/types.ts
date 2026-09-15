@@ -9,12 +9,22 @@ export type FinanceEntry = {
   notes: string; cancelledAt: string | null; cancelReason: string | null; version: number;
 };
 export type FinancePermissions = { create: boolean; update: boolean; cancel: boolean; settle: boolean; reverse: boolean; categories: boolean };
-export type FinanceFilters = { month: string; type: string; status: string; query: string; page: number };
+export type FinanceFilters = {
+  month: string; type: string; status: string; query: string; page: number;
+  dateFrom?: string; dateTo?: string; companyQuery?: string; categoryId?: string;
+  minAmountCents?: number; maxAmountCents?: number;
+};
+export type FinanceSearch = {
+  entries: FinanceEntry[]; count: number; page: number; today: string;
+  dateFrom: string; dateTo: string; categoryName: string | null;
+  totals: { receivable: number; payable: number; received: number; paid: number };
+};
 export type FinanceSnapshot = {
   workspace: string; today: string; month: string; page: number; count: number;
   entries: FinanceEntry[]; categories: FinanceCategory[]; permissions: FinancePermissions;
   totals: { receivable: number; payable: number; received: number; paid: number };
   monthly: { month: number; value: number }[]; expenses: { id: string; name: string; value: number }[];
+  search: FinanceSearch;
 };
 export type FinanceDetail = {
   entry: FinanceEntry;

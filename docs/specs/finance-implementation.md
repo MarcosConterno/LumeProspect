@@ -1,5 +1,7 @@
 # Financeiro — implementação e homologação
 
+> Evolução em 15/09/2026: [busca por período, valor, cliente, categoria e relatório para PDF](finance-search-reports.md). Essa entrega tem migration adicional e validação própria, ainda pendentes.
+
 Revisão estática em 15/09/2026. A última sessão parou durante a implementação, conforme `docs/financeiro-retomada.md`. O módulo já usa RPCs e dados reais; não é mais o esboço em memória. Execução SQL e validação da aplicação continuam sob responsabilidade do usuário.
 
 ## Entrega revisada

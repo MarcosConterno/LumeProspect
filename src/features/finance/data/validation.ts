@@ -36,8 +36,37 @@ export function validateEntry(input: EntryInput): EntryInput {
 export function validateFilters(input: FinanceFilters): FinanceFilters {
   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month)) throw new Error("Selecione um mês válido.");
   date(input.month+"-01");
-  if(!["all","receivable","payable"].includes(input.type)||!["all","open","overdue","partial","settled","cancelled"].includes(input.status)) throw new Error("Filtro inválido.");
+  if(!["all","receivable","payable"].includes(input.type)||!["all","any","open","overdue","partial","settled","cancelled"].includes(input.status)) throw new Error("Filtro inválido.");
   if(!Number.isSafeInteger(input.page)||input.page<1||input.page>1000000) throw new Error("Página inválida.");
-  return {...input,query:text(input.query,0,150)};
+  const monthEnd = new Date(input.month+"-01T12:00:00Z");
+  monthEnd.setUTCMonth(monthEnd.getUTCMonth()+1,0);
+  const dateFrom = date(input.dateFrom || input.month+"-01");
+  const dateTo = date(input.dateTo || monthEnd.toISOString().slice(0,10));
+  if(dateFrom>dateTo) throw new Error("A data inicial deve ser anterior ou igual à data final.");
+  const minAmountCents = input.minAmountCents === undefined ? undefined : cents(input.minAmountCents);
+  const maxAmountCents = input.maxAmountCents === undefined ? undefined : cents(input.maxAmountCents);
+  if(minAmountCents !== undefined && maxAmountCents !== undefined && minAmountCents>maxAmountCents) throw new Error("O valor mínimo não pode ultrapassar o máximo.");
+  return {month:input.month,type:input.type,status:input.status,page:input.page,query:text(input.query,0,150),dateFrom,dateTo,
+    companyQuery:text(input.companyQuery ?? "",0,160),categoryId:input.categoryId ? uuid(input.categoryId) : "",minAmountCents,maxAmountCents};
+}
+
+export function financeReportUrl(workspace: string, filters: FinanceFilters) {
+  const params = new URLSearchParams({workspace});
+  for(const [key,value] of Object.entries(validateFilters(filters))) {
+    if(value !== undefined) params.set(key,String(value));
+  }
+  return "/relatorios/financeiro?"+params.toString();
+}
+
+export function financeFiltersFromParams(params: Record<string,string|string[]|undefined>, month: string): FinanceFilters {
+  const read = (key: string) => {
+    const value = params[key];
+    if(Array.isArray(value)) throw new Error("Filtro repetido no endereço do relatório.");
+    return value;
+  };
+  return validateFilters({month:read("month") ?? month,type:read("type") ?? "all",status:read("status") ?? "all",query:read("query") ?? "",page:1,
+    dateFrom:read("dateFrom"),dateTo:read("dateTo"),companyQuery:read("companyQuery"),categoryId:read("categoryId"),
+    minAmountCents:read("minAmountCents") === undefined ? undefined : Number(read("minAmountCents")),
+    maxAmountCents:read("maxAmountCents") === undefined ? undefined : Number(read("maxAmountCents"))});
 }
 

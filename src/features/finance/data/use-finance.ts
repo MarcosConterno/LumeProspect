@@ -6,6 +6,7 @@ import type { FinanceFilters, FinanceSnapshot } from "../types";
 
 export function useFinance(initial: FinanceSnapshot) {
   const [filters, setFilters] = useState<FinanceFilters>({month:initial.month,type:"all",status:"all",query:"",page:1});
+  const [settledFilters, setSettledFilters] = useState(filters);
   const [snapshot, setSnapshot] = useState(initial);
   const [error, setError] = useState("");
   const [live, setLive] = useState(false);
@@ -23,7 +24,7 @@ export function useFinance(initial: FinanceSnapshot) {
         if(result.error !== undefined) setError(result.error);
         else {setSnapshot(result.data); setError("");}
       } catch {if(!disposed) setError("Não foi possível atualizar o financeiro. Tente novamente.");}
-      finally {if(!disposed) setLoading(false);}
+      finally {if(!disposed) {setLoading(false);setSettledFilters(filters);}}
     };
     const timer = setTimeout(fetchSnapshot, 250);
     return () => {disposed=true; clearTimeout(timer);};
@@ -44,5 +45,5 @@ export function useFinance(initial: FinanceSnapshot) {
     return () => {disposed=true; clearInterval(interval); window.removeEventListener("focus",onVisible); document.removeEventListener("visibilitychange",onVisible); void db.removeChannel(channel);};
   }, [initial.workspace, refresh]);
 
-  return {snapshot,filters,setFilters,error,live,loading,refresh};
+  return {snapshot,filters,setFilters,error,live,loading:loading || filters!==settledFilters,refresh};
 }
