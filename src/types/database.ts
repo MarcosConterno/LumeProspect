@@ -1043,6 +1043,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      preview_workspace_invite: { Args: { token:string }; Returns: Json }
       // Pending migration: 20260915160000_master_user_assignment.sql
       platform_assign_user: { Args: { target:string; address:string; member_role:string; check_only?:boolean }; Returns: Json }
       // Pending migration: 20260915120000_finance_search_reports.sql

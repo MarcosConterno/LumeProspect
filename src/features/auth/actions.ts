@@ -3,7 +3,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "./context";
-import { invitationDestination, validInvite } from "./links";
+import { invitationDestination, recoveryDestination, validInvite } from "./links";
 import { authErrorMessage } from "./errors";
 export type ActionState = { error?: string; message?: string; link?: string };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,7 +45,7 @@ export async function authenticate(mode: string, _previous: ActionState, form: F
     let site: string;
     try { site = await origin(); } catch (e) { return { error: (e as Error).message }; }
     const callback=new URL("/auth/callback",site);
-    callback.searchParams.set("next","/redefinir-senha"+(invite ? "?invite="+invite : ""));
+    callback.searchParams.set("next",recoveryDestination(invite));
     const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: callback.href });
     if (error) return { error: authErrorMessage(error,"Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos.") };
     return { message: "Se houver uma conta com esse e-mail, você receberá um link para redefinir sua senha." };
@@ -67,6 +67,14 @@ export async function signOut() {
   if (error) throw new Error("Não foi possível sair. Tente novamente.");
   (await cookies()).delete("lume-workspace");
   redirect("/login");
+}
+export async function switchInviteAccount(token: string) {
+  const invite = validInvite(token);
+  const db = await createClient();
+  const { error } = await db.auth.signOut();
+  if (error) throw new Error("Não foi possível sair. Tente novamente.");
+  (await cookies()).delete("lume-workspace");
+  redirect(invite ? "/login?invite=" + invite : "/login");
 }
 export async function selectWorkspace(form: FormData) {
   const { db,user }=await requireUser();

@@ -16,6 +16,8 @@ O diagnóstico e os critérios de conclusão estão em [docs/specs/project-audit
 
 ## Estado atual
 
+Última retomada (16/09/2026): [criação de usuários master, convites e recuperação de acesso](docs/specs/login-master-invitations.md). Corrigida a preservação do convite na recuperação de senha; lint, build e homologação desta revisão aguardam execução pelo usuário.
+
 | Área | Situação |
 | --- | --- |
 | Login, cadastro pessoal, seleção de empresa e equipe | Conectados ao Supabase; login confirmado pelo usuário |

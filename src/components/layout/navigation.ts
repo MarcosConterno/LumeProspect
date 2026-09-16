@@ -19,7 +19,7 @@ const routeModules: Record<string,string> = {
 export const platformNavigation = [
   ["Clientes e ambientes", "/lume", "prospects"],
   ["Masters", "/lume/masters", "configuracoes"],
-  ["Ambiente atual", "/dashboard", "dashboard"],
+  ...navigation,
 ] as const;
 export function filteredNavigation(allowedModules: string[]) {
   return navigation.filter(([,href])=>!routeModules[href] || allowedModules.includes(routeModules[href]));

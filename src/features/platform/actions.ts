@@ -30,7 +30,7 @@ export async function platformAction(operation: string,target: string | null,_pr
         platformError(result.error);
       }
       revalidatePath("/lume","layout");
-      return {message:"Convite gerado. Compartilhe o link com a pessoa; ela deve confirmar o e-mail e aceitar o convite. Válido por 7 dias.",link:"/convite/"+token};
+      return {message:(operation==="invite_master" ? "Link de acesso master gerado. " : "Link de acesso administrador gerado. ")+"Nenhum e-mail foi enviado. Copie e compartilhe o link com a pessoa. Ela precisa entrar com o e-mail convidado e clicar em Aceitar. Válido por 7 dias.",link:"/convite/"+token,inviteEmail:email};
     }
     if(!["create_client","configure_client","remove_master"].includes(operation)) return {error:"Operação inválida."};
     const name=String(form.get("name") ?? "").trim();

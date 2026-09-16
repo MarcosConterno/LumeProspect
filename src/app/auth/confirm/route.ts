@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { authDestination, validInvite } from "@/features/auth/links";
+import { authDestination, inviteFromDestination, recoveryDestination } from "@/features/auth/links";
 
 export async function GET(request:NextRequest) {
   const params=request.nextUrl.searchParams;
@@ -13,7 +13,8 @@ export async function GET(request:NextRequest) {
       if(callback.origin===request.nextUrl.origin && callback.pathname==="/auth/callback") next=authDestination(callback.searchParams.get("next"));
     } catch { /* Invalid destinations fall back to onboarding. */ }
   }
-  if(type==="recovery" && !next.startsWith("/redefinir-senha")) next="/redefinir-senha";
+  const invite = inviteFromDestination(next);
+  if(type==="recovery") next=recoveryDestination(invite);
   const hash=params.get("token_hash");
   let reason="invalid_link";
   if(hash && /^[a-f0-9]{32,128}$/i.test(hash) && (type==="email" || type==="recovery" || type==="invite")) {
@@ -25,7 +26,6 @@ export async function GET(request:NextRequest) {
   const failure=new URL("/auth/link-error",request.url);
   failure.searchParams.set("reason",reason);
   if(type==="recovery") failure.searchParams.set("flow","recovery");
-  const invite=next.startsWith("/convite/") ? validInvite(next.slice(9)) : validInvite(new URL(next,request.url).searchParams.get("invite"));
   if(invite) failure.searchParams.set("invite",invite);
   return NextResponse.redirect(failure);
 }

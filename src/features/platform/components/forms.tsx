@@ -7,7 +7,20 @@ const input="mt-1 block w-full rounded-lg border border-border bg-surface px-3 p
 const button="rounded-lg bg-accent px-4 py-2 text-sm text-white disabled:opacity-50";
 function Feedback({state}:{state:PlatformState}) {
   const [copied,setCopied]=useState(false);
-  return <div className="space-y-2 text-sm">{state.error&&<p role="alert" className="text-red-700">{state.error}</p>}{state.message&&<p role="status">{state.message}</p>}{state.link&&<div className="space-y-2"><a href={state.link} className="block underline">Abrir convite</a><button type="button" className="underline" onClick={async()=>{try{await navigator.clipboard.writeText(new URL(state.link!,window.location.origin).href);setCopied(true);}catch{setCopied(false);}}}>{copied?"Link copiado":"Copiar link"}</button></div>}</div>;
+  if(state.link) return <div className="space-y-3 text-sm">
+    {state.error&&<p role="alert" className="text-red-700">{state.error}</p>}
+    {state.message&&<p role="status">{state.message}</p>}
+    <div className="flex flex-wrap gap-3">
+      <button type="button" className="underline" onClick={async()=>{try{await navigator.clipboard.writeText(new URL(state.link!,window.location.origin).href);setCopied(true);}catch{setCopied(false);}}}>{copied?"Link copiado":"Copiar link para compartilhar"}</button>
+      {state.inviteEmail&&<button type="button" className="underline" onClick={()=>{
+        const link=new URL(state.link!,window.location.origin).href;
+        window.location.href="mailto:"+encodeURIComponent(state.inviteEmail!)+"?subject="+encodeURIComponent("Convite de acesso à Lume")+"&body="+encodeURIComponent("Entre com este e-mail e clique em Aceitar para concluir seu acesso à Lume.\n\n"+link+"\n\nO link é válido por 7 dias.");
+      }}>Abrir mensagem no meu e-mail</button>}
+      <a href={state.link} className="underline">Abrir link do convite</a>
+    </div>
+    <p className="text-xs text-[var(--ink-soft)]">A mensagem abre no seu aplicativo de e-mail. Revise e envie por lá. Abrir o link com sua conta master não aceita o convite pela outra pessoa.</p>
+  </div>;
+  return <div className="space-y-2 text-sm">{state.error&&<p role="alert" className="text-red-700">{state.error}</p>}{state.message&&<p role="status">{state.message}</p>}</div>;
 }
 export function ClientForm({workspace,modules=[]}:{workspace?:{id:string;name:string;status:string;version:number;is_lume:boolean};modules?:{module:string;enabled:boolean}[]}) {
   const [name,setName]=useState(workspace?.name ?? "");
@@ -34,7 +47,7 @@ export function ClientForm({workspace,modules=[]}:{workspace?:{id:string;name:st
 export function PlatformInvite({workspace,master=false}:{workspace:string;master?:boolean}) {
   const [email,setEmail]=useState("");
   const [state,action,pending]=useActionState(platformAction.bind(null,master?"invite_master":"invite_admin",workspace),{});
-  return <form action={action} className="space-y-3"><label className="block text-sm">{master?"E-mail do novo master Lume":"E-mail do administrador do cliente"}<input type="email" name="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} className={input}/></label><button disabled={pending} className={button}>Gerar convite</button><Feedback state={state}/></form>;
+  return <form action={action} className="space-y-3"><label className="block text-sm">{master?"E-mail do novo master Lume":"E-mail do administrador do cliente"}<input type="email" name="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} className={input}/></label><p className="text-xs text-[var(--ink-soft)]">Este botão gera um link para compartilhar. Não envia e-mail automaticamente.</p><button disabled={pending} className={button}>{pending?"Gerando link...":master?"Gerar link de acesso master":"Gerar link de convite"}</button><Feedback key={state.link ?? "empty"} state={state}/></form>;
 }
 export function RemoveMaster({id}:{id:string}) {
   const [state,action,pending]=useActionState(platformAction.bind(null,"remove_master",id),{});

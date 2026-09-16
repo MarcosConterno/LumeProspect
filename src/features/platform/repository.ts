@@ -57,7 +57,9 @@ export async function loadMasters() {
     db.from("workspaces").select("id").eq("is_lume",true).single(),
   ]);
   platformError(masters.error); platformError(home.error);
-  return {masters:masters.data ?? [],home:home.data?.id,user};
+  const invites=home.data ? await db.from("workspace_invites").select("id,email,role,accepted_at,revoked_at,expires_at").eq("workspace_id",home.data.id).eq("role","master").order("created_at",{ascending:false}).limit(30) : {data:[],error:null};
+  platformError(invites.error);
+  return {masters:masters.data ?? [],home:home.data?.id,user,invites:withInviteStatus(invites.data ?? [])};
 }
 export async function loadMemberSettings() {
   const context = await requireWorkspace();

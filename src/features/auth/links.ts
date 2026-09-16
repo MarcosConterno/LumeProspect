@@ -12,3 +12,14 @@ export function invitationDestination(invite: unknown) {
   const token=validInvite(invite);
   return token ? "/convite/"+token : "/onboarding";
 }
+
+export function inviteFromDestination(value: unknown): string {
+  const destination = authDestination(value);
+  if (destination.startsWith("/convite/")) return validInvite(destination.slice("/convite/".length));
+  return validInvite(destination.split("?invite=")[1]);
+}
+
+export function recoveryDestination(invite: unknown): string {
+  const token = validInvite(invite);
+  return "/redefinir-senha" + (token ? "?invite=" + token : "");
+}

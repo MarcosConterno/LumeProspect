@@ -1,6 +1,7 @@
 "use server";
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireUser, requireWorkspace } from "./context";
 import { selectWorkspace, type ActionState } from "./actions";
 
@@ -15,14 +16,18 @@ export async function createInvite(_previous: ActionState, form: FormData): Prom
   const { error } = await db.rpc("create_workspace_invite", { target: active.workspace_id, invite_email: email, invite_role: role, token });
   if (error) return { error: "Não foi possível criar o convite. Confira suas permissões e tente novamente." };
   revalidatePath("/configuracoes/equipe");
-  return { message: `Convite criado para ${email}. Válido por 7 dias. Compartilhe o link com essa pessoa.`, link: `/convite/${token}` };
+  return { message: `Link criado para ${email}. Nenhum e-mail foi enviado. Válido por 7 dias. Copie e compartilhe o link com essa pessoa.`, link: `/convite/${token}` };
 }
 export async function acceptInvite(_previous: ActionState, form: FormData): Promise<ActionState> {
   const { db } = await requireUser();
   const token = String(form.get("token") ?? "");
   if (!/^[a-f0-9]{64}$/.test(token)) return { error: "Convite inválido." };
   const { data, error } = await db.rpc("accept_workspace_invite", { token });
-  if (error || !data) return { error: "Convite indisponível: confira se está usando o e-mail convidado e confirmado. O link também pode ter expirado, sido usado ou revogado." };
+  if (error || !data) return { error: error?.message?.includes("another company") ? "Esta conta pertence a outra empresa. O acesso master exige uma conta sem vínculo com cliente ou vinculada à empresa interna Lume." : "Convite indisponível: confira se está usando o e-mail convidado e confirmado. O link também pode ter expirado, sido usado ou revogado." };
+  const master = await db.rpc("is_lume_master");
+  if (master.error) return { error: "O convite foi aceito, mas não foi possível conferir o perfil. Entre novamente para atualizar seu acesso." };
+  revalidatePath("/", "layout");
+  if (master.data) redirect("/lume");
   const selection = new FormData(); selection.set("workspace", data);
   await selectWorkspace(selection);
   return {};

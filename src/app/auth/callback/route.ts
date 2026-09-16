@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { authDestination } from "@/features/auth/links";
+import { authDestination, inviteFromDestination } from "@/features/auth/links";
 export async function GET(request: NextRequest) {
   const db = await createClient();
   const next=authDestination(request.nextUrl.searchParams.get("next"));
@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
   const errorUrl = new URL("/auth/link-error", request.url);
   errorUrl.searchParams.set("reason", reason);
   if (recovery) errorUrl.searchParams.set("flow", "recovery");
-  if(next.startsWith("/convite/")) errorUrl.searchParams.set("invite",next.slice("/convite/".length));
-  if(recovery) {
-    const invite=new URL(next,request.url).searchParams.get("invite");
-    if(invite) errorUrl.searchParams.set("invite",invite);
-  }
+  const invite = inviteFromDestination(next);
+  if(invite) errorUrl.searchParams.set("invite",invite);
   return NextResponse.redirect(errorUrl);
 }
