@@ -45,14 +45,3 @@ export async function requireWorkspace() {
   return { ...context, active: context.active };
 }
 
-export async function getTeam() {
-  const context = await requireWorkspace();
-  const { db, active } = context;
-  const canManage = ["owner", "admin"].includes(active.role);
-  const [members, invites] = await Promise.all([
-    db.from("workspace_members").select("user_id,role,profiles(full_name)").eq("workspace_id", active.workspace_id).order("created_at"),
-    canManage ? db.from("workspace_invites").select("id,email,role,expires_at,accepted_at,revoked_at").eq("workspace_id", active.workspace_id).order("created_at", { ascending:false }).limit(100) : Promise.resolve({ data: [], error: null }),
-  ]);
-  if (members.error || invites.error) throw new Error("Não foi possível carregar a equipe. Tente novamente.");
-  return { ...context, canManage, members: members.data ?? [], invites: invites.data ?? [], now: Date.now() };
-}

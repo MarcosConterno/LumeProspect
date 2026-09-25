@@ -1043,6 +1043,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      // Pending migration: 20260916120000_direct_user_management.sql
+      assign_managed_user: { Args: { target:string; address:string; member_role:string; check_only?:boolean }; Returns: Json }
       preview_workspace_invite: { Args: { token:string }; Returns: Json }
       // Pending migration: 20260915160000_master_user_assignment.sql
       platform_assign_user: { Args: { target:string; address:string; member_role:string; check_only?:boolean }; Returns: Json }

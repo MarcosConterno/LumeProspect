@@ -1,7 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
-import { validInvite } from "@/features/auth/links";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const db = createServerClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
@@ -22,8 +21,6 @@ export async function proxy(request: NextRequest) {
       loginUrl.pathname = "/auth/link-error";
       loginUrl.searchParams.set("flow", "recovery");
       loginUrl.searchParams.set("reason", "session_missing");
-      const invite = validInvite(request.nextUrl.searchParams.get("invite"));
-      if (invite) loginUrl.searchParams.set("invite", invite);
     }
     const destination = NextResponse.redirect(loginUrl);
     response.cookies.getAll().forEach((cookie) => destination.cookies.set(cookie));

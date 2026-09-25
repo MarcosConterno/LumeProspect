@@ -9,6 +9,7 @@ export const navigation = [
   ["Buscar", "/buscar", "search"],
   ["Prospects", "/prospects", "prospects"],
   ["Favoritos", "/favoritos", "favoritos"],
+  ["Configurações", "/configuracoes", "configuracoes"],
 ] as const;
 
 const routeModules: Record<string,string> = {
@@ -18,7 +19,6 @@ const routeModules: Record<string,string> = {
 };
 export const platformNavigation = [
   ["Clientes e ambientes", "/lume", "prospects"],
-  ["Masters", "/lume/masters", "configuracoes"],
   ...navigation,
 ] as const;
 export function filteredNavigation(allowedModules: string[]) {

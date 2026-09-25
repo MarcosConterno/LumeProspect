@@ -25,7 +25,7 @@ export async function saveFinanceCategory(workspace:string,input:{id:string;vers
     const {db}=await financeContext(workspace);
     if(!["receivable","payable"].includes(input.kind)||typeof input.active!=="boolean") throw new Error("Categoria inválida.");
     const result=await db.rpc("finance_save_category",{target:workspace,payload:{...input,id:uuid(input.id),version:input.version===undefined?undefined:version(input.version),name:text(input.name,2,80)}});
-    financeError(result.error);revalidatePath("/financeiro");return result.data;
+    financeError(result.error);revalidatePath("/financeiro");revalidatePath("/configuracoes/financeiro");return result.data;
   });
 }
 export async function settleFinanceEntry(workspace:string,input:{id:string;entryId:string;version:number;amountCents:number;paidOn:string;notes:string}) {

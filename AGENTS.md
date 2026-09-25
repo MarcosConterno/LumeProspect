@@ -24,6 +24,8 @@
 - Ordem: administração, CRM, financeiro e integração comercial/financeira. Prospects, busca e automações de prospecção ficam por último.
 - CRM deve funcionar com cadastro manual de empresas e contatos, sem depender do módulo de prospects.
 - Distinguir empresa assinante (`workspaces`), empresa atendida (`companies`) e administração da plataforma Lume.
+- Acesso por cadastro direto, sem convites: administrador cadastra usuários e define papéis somente na própria empresa; master gerencia todas as empresas e cadastra outros masters. Preservar a separação entre administrador e master. Estado da mudança em `docs/specs/direct-user-management.md`.
+- Configurações centralizadas em `/configuracoes`, incluindo Usuários, Financeiro, CRM e Serviços. Usuários é visível somente a master, administrador e gerente. Master escolhe a empresa; os demais veem somente a própria. Gerente gerencia usuários comuns sem conceder direitos superiores aos próprios. Estado e SQL pendente em `docs/specs/central-settings-users.md`.
 - Consultar `docs/specs/project-audit-2026-09-14.md` para o inventário atual e as pendências. A referência HTML orienta a aparência, não altera essa ordem de trabalho.
 - Banco exclusivamente no Supabase online. Migrations no repositório são histórico das alterações, não uma exigência de banco local ou Docker.
 - A partir de agora, o usuário executa TODO SQL no Supabase. O agente prepara os arquivos e informa a ordem; não chama ferramentas do Supabase. Distinguir migrations já aplicadas das pendentes para evitar duplicação.

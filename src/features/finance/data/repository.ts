@@ -50,6 +50,14 @@ export async function loadFinance(workspace: string, filters: FinanceFilters) {
   return {...requiredJson<Omit<FinanceSnapshot,"search">>(result.data),entries:matches.entries,count:matches.count,page:matches.page,search:matches};
 }
 
+export async function loadFinanceSettings(workspace: string) {
+  const {db}=await financeContext(workspace);
+  const result=await db.rpc("finance_snapshot",{target:workspace,filters:{month:todayInSaoPaulo().slice(0,7),type:"all",status:"all",query:"",page:1}});
+  financeError(result.error);
+  const snapshot=requiredJson<FinanceSnapshot>(result.data);
+  return {categories:snapshot.categories,canManage:snapshot.permissions.categories};
+}
+
 function financeSearchError(error: {code?:string;message?:string}|null) {
   if(error && ["PGRST202","42883"].includes(error.code ?? "")) throw new Error("A busca financeira precisa da atualização 20260915120000_finance_search_reports.sql no Supabase.");
   if(error?.message?.includes("Report limit exceeded")) throw new Error("O relatório ultrapassa 5.000 lançamentos. Reduza o período ou refine os filtros para imprimir todos os resultados.");

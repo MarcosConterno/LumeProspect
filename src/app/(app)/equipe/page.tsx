@@ -1,4 +1,2 @@
 import { redirect } from "next/navigation";
-export default function LegacyPage() {
-  redirect("/configuracoes/equipe");
-}
+export default function Page() { redirect("/configuracoes/usuarios"); }

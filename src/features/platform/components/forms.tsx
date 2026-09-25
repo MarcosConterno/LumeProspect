@@ -3,23 +3,10 @@ import { useActionState, useState } from "react";
 import { platformAction, saveMember } from "../actions";
 import { products, type PlatformState, type MemberPermission } from "../types";
 import { formatMonthlyPrice, getModulePlan, monthlyPrices } from "../pricing";
+import { assignableRoles, roleLabels } from "../roles";
 const input="mt-1 block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm";
 const button="rounded-lg bg-accent px-4 py-2 text-sm text-white disabled:opacity-50";
 function Feedback({state}:{state:PlatformState}) {
-  const [copied,setCopied]=useState(false);
-  if(state.link) return <div className="space-y-3 text-sm">
-    {state.error&&<p role="alert" className="text-red-700">{state.error}</p>}
-    {state.message&&<p role="status">{state.message}</p>}
-    <div className="flex flex-wrap gap-3">
-      <button type="button" className="underline" onClick={async()=>{try{await navigator.clipboard.writeText(new URL(state.link!,window.location.origin).href);setCopied(true);}catch{setCopied(false);}}}>{copied?"Link copiado":"Copiar link para compartilhar"}</button>
-      {state.inviteEmail&&<button type="button" className="underline" onClick={()=>{
-        const link=new URL(state.link!,window.location.origin).href;
-        window.location.href="mailto:"+encodeURIComponent(state.inviteEmail!)+"?subject="+encodeURIComponent("Convite de acesso à Lume")+"&body="+encodeURIComponent("Entre com este e-mail e clique em Aceitar para concluir seu acesso à Lume.\n\n"+link+"\n\nO link é válido por 7 dias.");
-      }}>Abrir mensagem no meu e-mail</button>}
-      <a href={state.link} className="underline">Abrir link do convite</a>
-    </div>
-    <p className="text-xs text-[var(--ink-soft)]">A mensagem abre no seu aplicativo de e-mail. Revise e envie por lá. Abrir o link com sua conta master não aceita o convite pela outra pessoa.</p>
-  </div>;
   return <div className="space-y-2 text-sm">{state.error&&<p role="alert" className="text-red-700">{state.error}</p>}{state.message&&<p role="status">{state.message}</p>}</div>;
 }
 export function ClientForm({workspace,modules=[]}:{workspace?:{id:string;name:string;status:string;version:number;is_lume:boolean};modules?:{module:string;enabled:boolean}[]}) {
@@ -44,28 +31,19 @@ export function ClientForm({workspace,modules=[]}:{workspace?:{id:string;name:st
     {workspace&&<p className="text-xs text-[var(--ink-soft)]">Suspender bloqueia o acesso dos usuários desta empresa. Os dados são preservados.</p>}
   </form>;
 }
-export function PlatformInvite({workspace,master=false}:{workspace:string;master?:boolean}) {
-  const [email,setEmail]=useState("");
-  const [state,action,pending]=useActionState(platformAction.bind(null,master?"invite_master":"invite_admin",workspace),{});
-  return <form action={action} className="space-y-3"><label className="block text-sm">{master?"E-mail do novo master Lume":"E-mail do administrador do cliente"}<input type="email" name="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)} className={input}/></label><p className="text-xs text-[var(--ink-soft)]">Este botão gera um link para compartilhar. Não envia e-mail automaticamente.</p><button disabled={pending} className={button}>{pending?"Gerando link...":master?"Gerar link de acesso master":"Gerar link de convite"}</button><Feedback key={state.link ?? "empty"} state={state}/></form>;
-}
 export function RemoveMaster({id}:{id:string}) {
   const [state,action,pending]=useActionState(platformAction.bind(null,"remove_master",id),{});
   return <form action={action} className="space-y-2"><label className="flex items-center gap-2 text-sm"><input name="confirm" type="checkbox" required/>Confirmo a remoção do acesso master e a desativação do acesso à Lume</label><button disabled={pending} className="text-sm text-red-700 underline">Remover master</button><Feedback state={state}/></form>;
 }
-export function RevokeInvite({id}:{id:string}) {
-  const [state,action,pending]=useActionState(platformAction.bind(null,"revoke_invite",id),{});
-  return <form action={action} className="space-y-2"><button disabled={pending} className="text-sm underline">Revogar convite</button><Feedback state={state}/></form>;
-}
-export function MemberForm({workspace,person,role,active,permissions,enabledModules}:{workspace:string;person:string;role:string;active:boolean;permissions:MemberPermission[];enabledModules:string[]}) {
+export function MemberForm({workspace,person,role,active,permissions,enabledModules,operatorRole="admin"}:{workspace:string;person:string;role:string;active:boolean;permissions:MemberPermission[];enabledModules:string[];operatorRole?:string}) {
   const [state,action,pending]=useActionState(saveMember.bind(null,workspace,person),{});
   const [memberRole,setRole]=useState(role);
   const [isActive,setActive]=useState(active);
   const [rights,setRights]=useState(()=>Object.fromEntries(products.map(([key])=>{const p=permissions.find(p=>p.module===key);return [key,{read:p?.can_read ?? true,create:p?.can_create ?? true,update:p?.can_update ?? true,delete:p?.can_delete ?? false,settle:p?.can_settle ?? false,reverse:p?.can_reverse ?? false}];})));
   return <form action={action} className="space-y-4"><fieldset disabled={pending} className="space-y-3">
-    <label className="block text-sm">Perfil<select name="role" value={memberRole} onChange={e=>setRole(e.target.value)} className={input}><option value="admin">Administrador</option><option value="member">Usuário</option></select></label>
+    <label className="block text-sm">Perfil<select name="role" value={memberRole} onChange={e=>setRole(e.target.value)} className={input}>{assignableRoles(operatorRole).map(value=><option key={value} value={value}>{roleLabels[value]}</option>)}</select></label>
     <label className="flex items-center gap-2 text-sm"><input name="active" type="checkbox" checked={isActive} onChange={e=>setActive(e.target.checked)}/>Acesso ativo</label>
-    <p className="text-xs text-[var(--ink-soft)]">Administradores gerenciam a equipe e têm acesso completo aos módulos liberados. As permissões abaixo se aplicam ao perfil Usuário.</p>
+    <p className="text-xs text-[var(--ink-soft)]">Administradores gerenciam a equipe e têm acesso completo aos módulos liberados. As permissões abaixo se aplicam aos perfis Usuário e Gerente. Gerentes só podem conceder permissões que também possuem.</p>
     {products.map(([key,label])=><fieldset key={key} className="rounded-lg border border-border p-3"><legend className="px-1 text-sm">{label}{!enabledModules.includes(key)?" — não liberado pela Lume":""}</legend><div className="flex flex-wrap gap-4">{(["read","create","update","delete","settle","reverse"] as const).filter(right=>key==="financeiro"||!["settle","reverse"].includes(right)).map(right=><label key={right} className="flex items-center gap-1 text-xs"><input type="checkbox" name={key+"_"+right} checked={rights[key][right]} disabled={right!=="read"&&!rights[key].read} onChange={e=>setRights(current=>({...current,[key]:{...current[key],[right]:e.target.checked}}))}/>{{read:"Visualizar",create:"Criar",update:"Editar",delete:key==="financeiro"?"Cancelar":"Excluir",settle:"Registrar baixas",reverse:"Estornar baixas"}[right]}</label>)}</div>{key==="financeiro"&&<p className="mt-3 text-xs text-[var(--ink-soft)]">Categorias são gerenciadas por administradores. Cancelamentos e estornos exigem motivo e preservam o histórico.</p>}</fieldset>)}
     <button className={button}>Salvar acesso e permissões</button></fieldset><Feedback state={state}/>
   </form>;

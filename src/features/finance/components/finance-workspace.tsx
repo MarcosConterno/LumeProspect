@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { useFinance } from "../data/use-finance";
 import { dateLabel, entryStatus, money } from "../format";
 import type { FinanceFilters, FinanceSnapshot } from "../types";
-import { CategoryManager } from "./category-manager";
+import Link from "next/link";
 import { EntryDetail } from "./entry-detail";
 import { EntryForm } from "./entry-form";
 import { FinanceCharts } from "./finance-charts";
@@ -15,7 +15,6 @@ export function FinanceWorkspace({initial}:{initial:FinanceSnapshot}) {
   const {snapshot,filters,setFilters,error,live,loading,refresh}=useFinance(initial);
   const [selected,setSelected]=useState<string|null>(null);
   const [showForm,setShowForm]=useState(false);
-  const [showCategories,setShowCategories]=useState(false);
   const [showFilters,setShowFilters]=useState(false);
   const [searchFilters,setSearchFilters]=useState<FinanceFilters>(()=>({month:initial.month,type:"all",status:"all",query:"",page:1}));
   const [searchReset,setSearchReset]=useState(0);
@@ -40,10 +39,9 @@ export function FinanceWorkspace({initial}:{initial:FinanceSnapshot}) {
         <section className="finance-ledger" aria-label="Lançamentos financeiros" aria-busy={loading}>
           <div className="finance-section-heading"><div><h2>Lançamentos</h2><p>Contas a pagar e a receber</p></div><div className="finance-actions">
             <button type="button" onClick={()=>setShowFilters(value=>!value)} aria-expanded={showFilters} aria-controls="finance-search-filters">{showFilters ? "Ocultar filtros" : "Filtrar"}</button>
-            {snapshot.permissions.categories && <button type="button" onClick={()=>setShowCategories(value=>!value)} aria-expanded={showCategories}>Categorias</button>}
+            {snapshot.permissions.categories && <Link href="/configuracoes/financeiro">Configurações</Link>}
             {snapshot.permissions.create && <button type="button" className="finance-primary" onClick={()=>setShowForm(value=>!value)} aria-expanded={showForm}>{showForm ? "Fechar cadastro" : "+ Novo lançamento"}</button>}
           </div></div>
-          {showCategories && snapshot.permissions.categories && <CategoryManager workspace={snapshot.workspace} categories={snapshot.categories} onSaved={saved}/>}
           {showForm && snapshot.permissions.create && <EntryForm workspace={snapshot.workspace} categories={snapshot.categories} today={snapshot.today} onSaved={()=>{setShowForm(false);saved();}} onClose={()=>setShowForm(false)}/>}
           {notice && <p role="status" className="finance-local-notice">{loading ? notice : "Alteração salva."}</p>}
           <div className="finance-tabs" aria-label="Tipo de lançamento">{[["all","Todos"],["receivable","A receber"],["payable","A pagar"]].map(([key,label])=><button key={key} type="button" aria-pressed={filters.type===key} onClick={()=>setFilters(current=>({...current,type:key,page:1}))}>{label}</button>)}</div>

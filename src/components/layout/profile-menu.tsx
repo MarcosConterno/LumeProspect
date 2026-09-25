@@ -44,7 +44,7 @@ export function ProfileMenu({ name, email }: { name: string; email: string }) {
       </div>
       <nav aria-label="Minha conta">
         <Link href="/perfil" onClick={close}><NavIcon name="prospects" /><span>Meu perfil</span><span className="profile-link-arrow" aria-hidden="true">›</span></Link>
-        <Link href="/configuracoes/empresa" onClick={close}><NavIcon name="configuracoes" /><span>Configurações</span><span className="profile-link-arrow" aria-hidden="true">›</span></Link>
+        <Link href="/configuracoes" onClick={close}><NavIcon name="configuracoes" /><span>Configurações</span><span className="profile-link-arrow" aria-hidden="true">›</span></Link>
       </nav>
       <form action={signOut}>
         <button type="submit"><svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4" /></svg><span>Sair</span></button>

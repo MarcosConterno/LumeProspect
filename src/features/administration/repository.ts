@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireModule } from "@/features/auth/module-access";
 import { requireWorkspace } from "@/features/auth/context";
 import { validId } from "./validation";
+import { managesUsers } from "@/features/platform/roles";
 import type { RegistryKind, RegistryRow, Values } from "./types";
 
 export async function administrationContext(expected?: string) {
@@ -113,5 +114,5 @@ export async function getAdministrationSummary() {
     db.from("workspace_members").select("user_id",{count:"exact",head:true}).eq("workspace_id",active.workspace_id),
   ]);
   results.forEach(r => checkDatabase(r.error));
-  return { name: active.workspaces?.name ?? "Sua empresa", counts: results.map(r => r.count ?? 0) };
+  return { name: active.workspaces?.name ?? "Sua empresa", counts: results.map(r => r.count ?? 0), canManageUsers: context.isMaster || managesUsers(active.role) };
 }

@@ -12,7 +12,7 @@ export type FieldDefinition = {
 export const registryConfig = {
   company: { path: "/clientes", title: "Clientes e empresas", singular: "empresa", description: "Empresas atendidas pelo CRM, cadastradas independentemente da prospecção." },
   contact: { path: "/contatos", title: "Contatos", singular: "contato", description: "Pessoas de contato vinculadas às empresas atendidas." },
-  service: { path: "/servicos", title: "Serviços", singular: "serviço", description: "Catálogo de serviços para os negócios do CRM." },
+  service: { path: "/configuracoes/servicos", title: "Serviços", singular: "serviço", description: "Catálogo de serviços para os negócios do CRM." },
 } as const;
 export const fields: Record<RecordKind, readonly FieldDefinition[]> = {
   company: [

@@ -3,9 +3,8 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "./context";
-import { invitationDestination, recoveryDestination, validInvite } from "./links";
 import { authErrorMessage } from "./errors";
-export type ActionState = { error?: string; message?: string; link?: string };
+export type ActionState = { error?: string; message?: string };
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 async function origin() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return new URL(process.env.NEXT_PUBLIC_SITE_URL).origin;
@@ -16,28 +15,18 @@ async function origin() {
 export async function authenticate(mode: string, _previous: ActionState, form: FormData): Promise<ActionState> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
-  const invite=validInvite(form.get("invite"));
+  if (!["login", "recover", "resend", "password"].includes(mode)) return { error: "O cadastro é realizado pelo administrador da empresa." };
   const db = await createClient();
   if (mode !== "password" && !emailPattern.test(email)) return { error: "Informe um e-mail válido." };
   if (!["recover","resend"].includes(mode) && (password.length < (mode === "login" ? 1 : 8) || password.length > 128)) return { error: "Use uma senha com 8 a 128 caracteres." };
   if (mode === "login") {
     const { error } = await db.auth.signInWithPassword({ email, password });
     if (error) return { error: error.code === "email_not_confirmed" ? "Confirme seu e-mail antes de entrar." : "Não foi possível entrar. Confira o e-mail e a senha e tente novamente." };
-  } else if (mode === "signup") {
-    const name = String(form.get("name") ?? "").trim();
-    if (name.length < 2 || name.length > 120) return { error: "Informe seu nome (2 a 120 caracteres)." };
-    let site: string;
-    try { site = await origin(); } catch (e) { return { error: (e as Error).message }; }
-    const callback=new URL("/auth/callback",site);
-    callback.searchParams.set("next",invitationDestination(invite));
-    const { data, error } = await db.auth.signUp({ email, password, options: { data: { full_name: name }, emailRedirectTo: callback.href } });
-    if (error) return { error: authErrorMessage(error,"Não foi possível cadastrar. Tente novamente em alguns minutos ou use a recuperação de senha.") };
-    if (!data.session) return { message: "Confira seu e-mail para confirmar o cadastro. Se já possui conta, entre ou recupere sua senha." };
   } else if (mode === "resend") {
     let site:string;
     try {site=await origin();} catch(error) {return {error:(error as Error).message};}
     const callback=new URL("/auth/callback",site);
-    callback.searchParams.set("next",invitationDestination(invite));
+    callback.searchParams.set("next","/onboarding");
     const {error}=await db.auth.resend({type:"signup",email,options:{emailRedirectTo:callback.href}});
     if(error) return {error:authErrorMessage(error,"Não foi possível reenviar a confirmação agora. Aguarde e tente novamente.")};
     return {message:"Se este cadastro aguarda confirmação, você receberá um novo e-mail. Confira também o spam."};
@@ -45,7 +34,7 @@ export async function authenticate(mode: string, _previous: ActionState, form: F
     let site: string;
     try { site = await origin(); } catch (e) { return { error: (e as Error).message }; }
     const callback=new URL("/auth/callback",site);
-    callback.searchParams.set("next",recoveryDestination(invite));
+    callback.searchParams.set("next","/redefinir-senha");
     const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: callback.href });
     if (error) return { error: authErrorMessage(error,"Não foi possível solicitar a recuperação agora. Tente novamente em alguns minutos.") };
     return { message: "Se houver uma conta com esse e-mail, você receberá um link para redefinir sua senha." };
@@ -56,9 +45,8 @@ export async function authenticate(mode: string, _previous: ActionState, form: F
     if (error) return { error: "Não foi possível alterar a senha. Solicite um novo link ou escolha outra senha." };
     const result = await db.auth.signOut();
     if (result.error) return { message: "Senha alterada. Saia da conta e entre novamente." };
-    redirect("/login?updated=1"+(invite ? "&invite="+invite : ""));
+    redirect("/login?updated=1");
   } else return { error: "Operação inválida." };
-  if (invite) redirect(`/convite/${invite}`);
   redirect("/onboarding");
 }
 export async function signOut() {
@@ -67,14 +55,6 @@ export async function signOut() {
   if (error) throw new Error("Não foi possível sair. Tente novamente.");
   (await cookies()).delete("lume-workspace");
   redirect("/login");
-}
-export async function switchInviteAccount(token: string) {
-  const invite = validInvite(token);
-  const db = await createClient();
-  const { error } = await db.auth.signOut();
-  if (error) throw new Error("Não foi possível sair. Tente novamente.");
-  (await cookies()).delete("lume-workspace");
-  redirect(invite ? "/login?invite=" + invite : "/login");
 }
 export async function selectWorkspace(form: FormData) {
   const { db,user }=await requireUser();
@@ -90,8 +70,6 @@ export async function selectWorkspace(form: FormData) {
     if(result.error||!result.data?.workspaces) redirect("/onboarding");
   }
   (await cookies()).set("lume-workspace",id,{httpOnly:true,sameSite:"lax",secure:process.env.NODE_ENV==="production",path:"/",maxAge:60*60*24*365});
-  redirect("/dashboard");
-}
-export async function createWorkspace(): Promise<ActionState> {
-  return {error:"Novas empresas são cadastradas exclusivamente pela administração Lume."};
+  const destination = form.get("destination");
+  redirect(destination === "/configuracoes/empresa" ? destination : "/dashboard");
 }

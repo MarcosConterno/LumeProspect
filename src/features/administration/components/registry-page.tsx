@@ -4,8 +4,8 @@ import { registryConfig, type RegistryKind } from "../types";
 import { RecordForm } from "./record-form";
 
 const statusLabels: Record<string,string> = { prospect:"Em negociação",customer:"Cliente",active:"Ativo",inactive:"Inativo" };
-export async function RegistryPage({ kind, searchParams }: {
-  kind: RegistryKind; searchParams: Promise<Record<string,string | string[] | undefined>>;
+export async function RegistryPage({ kind, searchParams, settings=false }: {
+  kind: RegistryKind; searchParams: Promise<Record<string,string | string[] | undefined>>; settings?: boolean;
 }) {
   const params = await searchParams;
   const config = registryConfig[kind];
@@ -14,7 +14,7 @@ export async function RegistryPage({ kind, searchParams }: {
   const pages = Math.max(1,Math.ceil(data.count / 25));
   return <div className="max-w-6xl space-y-6">
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div><p className="text-sm text-accent-dark">Cadastros</p><h1 className="mt-2 font-display text-3xl">{config.title}</h1><p className="mt-2 text-sm text-[var(--ink-soft)]">{config.description}</p></div>
+      <div>{settings ? <h2 className="font-display text-2xl">Configurações de {config.title}</h2> : <><p className="text-sm text-accent-dark">Cadastros</p><h1 className="mt-2 font-display text-3xl">{config.title}</h1></>}<p className="mt-2 text-sm text-[var(--ink-soft)]">{config.description}</p></div>
       {data.canCreate && <Link href={config.path + "?new=1"} className="rounded-lg bg-accent px-4 py-2 text-sm text-white">Cadastrar {config.singular}</Link>}
     </header>
     {params.saved === "1" && <p role="status" className="rounded-lg bg-[var(--accent-soft)] p-3 text-sm">Cadastro salvo.</p>}

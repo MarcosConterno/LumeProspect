@@ -1,5 +1,7 @@
 # Login, convites e acesso master — 15/09/2026
 
+> Superado por decisão do usuário em 16/09/2026: [cadastro direto de usuários e masters](direct-user-management.md). Não seguir a aplicação de SQL de convites deste documento para a entrega atual. Conteúdo abaixo preservado como histórico.
+
 ## Retomada em 16/09/2026
 
 A revisão dos registros identificou esta entrega como o ponto mais recente de continuidade, após a criação de usuários pelo master. Administração e financeiro têm implementação; a interface do CRM permanece demonstrativa. A execução da migration de preview abaixo e a homologação não estão confirmadas nos registros disponíveis.

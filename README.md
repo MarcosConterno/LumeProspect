@@ -16,13 +16,13 @@ O diagnóstico e os critérios de conclusão estão em [docs/specs/project-audit
 
 ## Estado atual
 
-Última retomada (16/09/2026): [criação de usuários master, convites e recuperação de acesso](docs/specs/login-master-invitations.md). Corrigida a preservação do convite na recuperação de senha; lint, build e homologação desta revisão aguardam execução pelo usuário.
+Última entrega (16/09/2026): [configurações centralizadas e tela única de Usuários](docs/specs/central-settings-users.md). Master escolhe qualquer empresa; administrador e gerente veem somente a própria. Clientes e ambientes permite entrar nos dados de cada empresa. Nova migration para gerentes, lint, build e homologação aguardam execução pelo usuário.
 
 | Área | Situação |
 | --- | --- |
-| Login, cadastro pessoal, seleção de empresa e equipe | Conectados ao Supabase; login confirmado pelo usuário |
+| Login, seleção de empresa e equipe | Conectados ao Supabase; login confirmado anteriormente. Autocadastro retirado da aplicação |
 | Confirmação e recuperação por e-mail | Fluxos escritos; configuração e teste completo de entrega ainda precisam ser validados |
-| Empresa assinante, membros e convites | Banco e interface implementados |
+| Usuários e masters | Cadastro direto escrito; convites removidos da interface. Migration de bloqueio dos convites e novas permissões pendente |
 | Perfil, dados empresariais e cadastros comerciais | Interface e banco implementados; lint, build e homologação visual pendentes |
 | Tela CRM | Protótipo com mocks e alterações em memória |
 | Camada de dados do CRM | Em implementação; ações e repositório escritos, ainda sem conexão com a tela |
@@ -42,9 +42,9 @@ Next.js App Router, React, TypeScript, Tailwind CSS, Supabase e npm. Vercel é o
 - `src/features/crm`: contratos, validação, camada de dados, ações, componentes e mocks comerciais.
 - `src/features/prospects`: demonstrações de prospecção; última etapa do produto.
 - `src/components`: layout e UI compartilhada.
-- `src/lib/supabase`: clientes browser e server sem service role.
-- `src/types/database.ts`: tipos gerados do banco online.
-- `supabase/migrations`: histórico SQL das alterações aplicadas ao Supabase online.
+- `src/lib/supabase`: clientes browser/SSR com chave publicável e cliente Auth Admin exclusivo do servidor para cadastro autorizado de usuários.
+- `src/types/database.ts`: tipos do banco online com declarações manuais das RPCs novas.
+- `supabase/migrations`: histórico SQL e migrations pendentes identificadas nas especificações de cada entrega.
 - `supabase/tests`: testes SQL transacionais, com rollback.
 
 ## Ambiente

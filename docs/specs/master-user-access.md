@@ -1,5 +1,7 @@
 # Contas de acesso criadas pelo master — retomada em 15/09/2026
 
+> Regra atual em 16/09/2026: [cadastro direto de usuários e masters](direct-user-management.md), incluindo administradores de empresa e retirada dos convites. O roteiro abaixo registra a entrega anterior.
+
 > Continuidade: [login, convites e acesso master](login-master-invitations.md). Inclui migration nova pendente para mostrar o papel do convite antes do aceite e ajustes de navegação master.
 
 ## Onde o trabalho havia parado
