@@ -20,13 +20,14 @@ export function EntryDetail({id,snapshot,onSaved,onClose}:{id:string;snapshot:Fi
   },[snapshot,id,revision]);
   function saved() {setEditing(false);setRevision(n=>n+1);onSaved();}
   const entry=detail?.entry;
-  return <section className="finance-entry-detail" aria-label="Detalhes do lançamento">
+  return <section id="finance-entry-detail" className="finance-entry-detail" aria-label="Detalhes do lançamento">
     <div className="finance-section-heading"><h3>Detalhes do lançamento</h3><button type="button" onClick={onClose}>Fechar</button></div>
     {error && <p role="alert">{error} <button type="button" onClick={()=>setRevision(n=>n+1)}>Tentar novamente</button></p>}
     {!detail && !error && <p role="status">Carregando...</p>}
     {detail && entry && <>
       <h3>{entry.description}</h3><p>{entry.companyName} · {entry.categoryName}</p>
-      <p>{entry.type==="receivable" ? "Conta a receber" : "Conta a pagar"} · {entryStatus(entry,snapshot.today)} · vence em {dateLabel(entry.dueDate)}</p>
+      <p>{entry.type==="receivable" ? "Conta a receber" : "Conta a pagar"} · {entryStatus(entry,snapshot.today)} · lançado em {dateLabel(entry.launchDate || entry.dueDate)} · vence em {dateLabel(entry.dueDate)}</p>
+      <p>{entry.settlementDate ? `${entry.type === "receivable" ? "Recebido" : "Pago"} em ${dateLabel(entry.settlementDate)}` : "Ainda não recebido/pago"}</p>
       <p>Total: <strong>{money(entry.amountCents)}</strong> · Baixado: <strong>{money(entry.paidCents)}</strong> · Em aberto: <strong>{money(entry.cancelledAt ? 0 : entry.amountCents-entry.paidCents)}</strong></p>
       {entry.notes && <p className="finance-notes">{entry.notes}</p>}
       {entry.cancelledAt && <p>Cancelamento: {entry.cancelReason}</p>}
@@ -65,7 +66,7 @@ function PaymentForm({detail,snapshot,onSaved}:{detail:FinanceDetail;snapshot:Fi
   return <details><summary className="finance-text-button">{entry.type==="receivable" ? "Registrar recebimento" : "Registrar pagamento"}</summary><form onSubmit={submit}><fieldset disabled={pending} className="finance-entry-form">
     <p className="finance-form-note">Registre o valor efetivamente realizado. São permitidas baixas parciais.</p>
     <label>Valor (R$)<input name="amount" required inputMode="decimal" defaultValue={amountInput(entry.amountCents-entry.paidCents)}/></label>
-    <label>Data da baixa<input name="date" required type="date" min="1900-01-01" max={snapshot.today} defaultValue={snapshot.today}/></label>
+    <label>{entry.type === "receivable" ? "Data de recebimento" : "Data de pagamento"}<input name="date" required type="date" min="1900-01-01" max={snapshot.today} defaultValue={snapshot.today}/></label>
     <label className="finance-wide">Observações<input name="notes" maxLength={1000}/></label>
     {error && <p role="alert" className="finance-wide finance-coral">{error}</p>}<button className="finance-primary">{pending ? "Salvando..." : "Confirmar baixa"}</button>
   </fieldset></form></details>;

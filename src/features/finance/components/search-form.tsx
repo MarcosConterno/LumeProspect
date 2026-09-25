@@ -67,7 +67,7 @@ export function FinanceSearchForm({filters,categories,onApply,onClear}:{
         <label>De<input name="from" type="date" required min="1900-01-01" max="2100-12-31" defaultValue={filters.dateFrom ?? filters.month+"-01"}/></label>
         <label>Até<input name="to" type="date" required min="1900-01-01" max="2100-12-31" defaultValue={filters.dateTo ?? filters.month+"-01"}/></label>
       </>}
-      <label>Cliente / fornecedor<input name="company" type="search" maxLength={160} defaultValue={filters.companyQuery} placeholder="Nome ou parte do nome"/></label>
+      <label>{type === "payable" ? "Fornecedor" : type === "receivable" ? "Cliente" : "Cliente / fornecedor"}<input name="company" type="search" maxLength={160} defaultValue={filters.companyQuery} placeholder="Nome ou parte do nome"/></label>
       <CategorySelect name="category" value={category} onChange={setCategory} allowAll
         categories={categories.filter(item=>type==="all" || item.kind===type)}/>
       <label>Valor mínimo (R$)<input name="minimum" inputMode="decimal" defaultValue={filters.minAmountCents === undefined ? "" : amountInput(filters.minAmountCents)} placeholder="Sem mínimo"/></label>

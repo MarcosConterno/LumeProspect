@@ -5,8 +5,13 @@ import type { Database } from "@/types/database";
 import type { CrmSnapshot, CrmOptions, Deal, DealActivity, DealDetail } from "../types";
 import { uuid } from "./validation";
 
-type DealRow = Database["public"]["Tables"]["deals"]["Row"];
-type ActivityRow = Database["public"]["Tables"]["deal_activities"]["Row"];
+type DealRow = Pick<Database["public"]["Tables"]["deals"]["Row"],
+  "id" | "workspace_id" | "name" | "version" | "company_id" | "prospect_id" | "contact_id" |
+  "service_id" | "owner_id" | "value" | "stage" | "status" | "expected_close_date" | "score" |
+  "stage_entered_at" | "created_at" | "updated_at" | "summary" | "lost_reason">;
+type ActivityRow = Pick<Database["public"]["Tables"]["deal_activities"]["Row"],
+  "id" | "deal_id" | "type" | "title" | "description" | "scheduled_at" | "completed_at" |
+  "status" | "version" | "created_at">;
 type Db = Awaited<ReturnType<typeof requireWorkspace>>["db"];
 
 export async function crmContext(expectedWorkspace?: string) {
@@ -54,10 +59,12 @@ function mapDeal(row: DealRow, options: CrmOptions, next?: ActivityRow): Deal {
 export async function loadCrm(expectedWorkspace?: string): Promise<CrmSnapshot> {
   const { db, active, user } = await crmContext(expectedWorkspace);
   const workspace = active.workspace_id;
+  const dealSelection = "id,workspace_id,name,version,company_id,prospect_id,contact_id,service_id,owner_id,value,stage,status,expected_close_date,score,stage_entered_at,created_at,updated_at,summary,lost_reason";
+  const activitySelection = "id,deal_id,type,title,description,scheduled_at,completed_at,status,version,created_at";
   const [options, rows, pending] = await Promise.all([
     optionsFor(db, workspace),
-    allRows((from, to) => db.from("deals").select("*").eq("workspace_id", workspace).order("id").range(from, to)),
-    allRows((from, to) => db.from("deal_activities").select("*").eq("workspace_id", workspace).eq("status", "pending").order("scheduled_at", { nullsFirst: false }).order("id").range(from, to)),
+    allRows((from, to) => db.from("deals").select(dealSelection).eq("workspace_id", workspace).order("id").range(from, to)),
+    allRows((from, to) => db.from("deal_activities").select(activitySelection).eq("workspace_id", workspace).eq("status", "pending").order("scheduled_at", { nullsFirst: false }).order("id").range(from, to)),
   ]);
   const nextByDeal = new Map<string, ActivityRow>();
   for (const activity of pending) if (!nextByDeal.has(activity.deal_id)) nextByDeal.set(activity.deal_id, activity);
@@ -66,10 +73,12 @@ export async function loadCrm(expectedWorkspace?: string): Promise<CrmSnapshot> 
 export async function loadDeal(workspace: string, id: string): Promise<DealDetail> {
   const { db } = await crmContext(workspace);
   uuid(id);
+  const dealSelection = "id,workspace_id,name,version,company_id,prospect_id,contact_id,service_id,owner_id,value,stage,status,expected_close_date,score,stage_entered_at,created_at,updated_at,summary,lost_reason";
+  const activitySelection = "id,deal_id,type,title,description,scheduled_at,completed_at,status,version,created_at";
   const [record, options, activities, notes, files] = await Promise.all([
-    db.from("deals").select("*").eq("workspace_id", workspace).eq("id", id).single(),
+    db.from("deals").select(dealSelection).eq("workspace_id", workspace).eq("id", id).single(),
     optionsFor(db, workspace),
-    allRows((from, to) => db.from("deal_activities").select("*").eq("workspace_id", workspace).eq("deal_id", id).order("scheduled_at", { nullsFirst: false }).order("id").range(from, to)),
+    allRows((from, to) => db.from("deal_activities").select(activitySelection).eq("workspace_id", workspace).eq("deal_id", id).order("scheduled_at", { nullsFirst: false }).order("id").range(from, to)),
     allRows((from, to) => db.from("deal_notes").select("id,body,created_by,created_at,updated_at,version").eq("workspace_id", workspace).eq("deal_id", id).order("created_at", { ascending: false }).order("id").range(from, to)),
     allRows((from, to) => db.from("deal_files").select("id,note_id,original_name,content_type,size_bytes,status,created_by,created_at,version").eq("workspace_id", workspace).eq("deal_id", id).order("created_at", { ascending: false }).order("id").range(from, to)),
   ]);

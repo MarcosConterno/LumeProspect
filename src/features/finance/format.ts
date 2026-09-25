@@ -1,7 +1,17 @@
 import type { FinanceEntry } from "./types";
 export const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 export const money = (cents: number) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(cents/100);
+export function currencyMask(value: string) {
+  const digits=value.replace(/\D/g,"");
+  return digits ? money(Number(digits)) : "";
+}
 export const dateLabel = (date: string) => date.split("-").reverse().join("/");
+export function percentChange(current: number, previous: number) {
+  return previous === 0 ? null : (current - previous) / Math.abs(previous) * 100;
+}
+export function percentLabel(value: number) {
+  return `${Math.abs(value).toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})}%`;
+}
 export function entryStatus(entry: FinanceEntry, today: string) {
   if(entry.cancelledAt) return "Cancelado";
   if(entry.paidCents===entry.amountCents) return entry.type==="receivable"?"Recebido":"Pago";

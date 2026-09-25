@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound, redirect } from "next/navigation";
-import { requireUser, getWorkspaceContext } from "@/features/auth/context";
+import { getWorkspaceContext } from "@/features/auth/context";
 import { validId } from "@/features/administration/validation";
 import { managesUsers } from "./roles";
 
@@ -17,18 +17,16 @@ export function platformError(error: { code?: string; message?: string } | null)
   throw new Error("Não foi possível concluir a operação. Tente novamente.");
 }
 export async function requireMaster() {
-  const context = await requireUser();
-  const result = await context.db.rpc("is_lume_master");
-  platformError(result.error);
-  if (!result.data) redirect("/dashboard");
+  const context = await getWorkspaceContext();
+  if (!context.isMaster) redirect("/dashboard");
   return context;
 }
 export async function loadPlatform(q: string, page: number) {
   const context = await requireMaster();
   const { db } = context;
-  const result = await db.from("workspaces").select("id,name,status,is_lume,created_at", {count:"exact"})
-    .ilike("name","%" + q.replace(/[\\%_]/g,"\\$&") + "%").order("is_lume",{ascending:false}).order("name").order("id")
-    .range((page-1)*25,page*25-1);
+  let query = db.from("workspaces").select("id,name,status,is_lume,created_at", {count:"exact"}).eq("is_lume",false);
+  if (q) query = query.ilike("name","%" + q.replace(/[\\%_]/g,"\\$&") + "%");
+  const result = await query.order("name").order("id").range((page-1)*25,page*25-1);
   platformError(result.error);
   return { ...context, rows:result.data ?? [],count:result.count ?? 0 };
 }
@@ -36,7 +34,7 @@ export async function loadClient(id: string) {
   const { db } = await requireMaster();
   try { validId(id); } catch { notFound(); }
   const [workspace,modules,audit] = await Promise.all([
-    db.from("workspaces").select("*").eq("id",id).maybeSingle(),
+    db.from("workspaces").select("id,name,status,is_lume,version,created_at,updated_at").eq("id",id).maybeSingle(),
     db.from("workspace_modules").select("module,enabled").eq("workspace_id",id),
     db.from("admin_audit").select("id,event,details,created_at,actor_id,profiles(full_name)").eq("workspace_id",id).order("created_at",{ascending:false}).limit(30),
   ]);
@@ -70,7 +68,7 @@ export async function loadMemberSettings(requested?: string, page = 1) {
   ]);
   [members,modules,masters].forEach(r=>platformError(r.error));
   const people=[...new Set([context.user.id,...(members.data ?? []).map(member=>member.user_id)])];
-  const permissions=await db.from("member_permissions").select("*").eq("workspace_id",target).in("user_id",people);
+  const permissions=await db.from("member_permissions").select("workspace_id,user_id,module,can_read,can_create,can_update,can_delete,can_settle,can_reverse").eq("workspace_id",target).in("user_id",people);
   platformError(permissions.error);
   return {...context,active,canManage:true,members:members.data ?? [],count:members.count ?? 0,page,
     permissions:permissions.data ?? [],modules:modules.data ?? [],masterIds:(masters.data ?? []).map(m=>m.user_id)};

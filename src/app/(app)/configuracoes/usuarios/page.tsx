@@ -30,7 +30,7 @@ export default async function UsersPage({searchParams}:{searchParams:Promise<{em
         <button className="rounded-lg bg-accent px-4 py-2 text-sm text-white">Selecionar empresa</button>
       </form>
       <nav className="flex flex-wrap gap-3 text-xs" aria-label="Páginas de empresas"><span>{companies.count} empresa(s) encontrada(s) · página {companyPage}</span>{companyPage>1 && <Link href={companyHref(companyPage-1)} className="underline">Anteriores</Link>}{companyPage*25<companies.count && <Link href={companyHref(companyPage+1)} className="underline">Próximas</Link>}</nav>
-      <p className="text-xs text-[var(--ink-soft)]">Esta seleção vale para a gestão de usuários. Para trabalhar nos dados de uma empresa, use Entrar no ambiente em Clientes e ambientes.</p>
+      <p className="text-xs text-[var(--ink-soft)]">Esta seleção vale para a gestão de usuários. Para trabalhar nos dados de uma empresa, use Entrar no ambiente em Ambientes.</p>
     </section>}
     <div className="rounded-xl border border-border bg-[var(--accent-soft)] p-4"><p className="text-xs">Empresa dos usuários</p><strong>{active.workspaces.name}</strong></div>
     {active.workspaces.status==="active" ? <section className="space-y-4 rounded-xl border border-border bg-surface p-5"><h3 className="font-display text-xl">Cadastrar usuário</h3><PlatformUserForm workspace={active.workspace_id} canCreate={authAdminConfigured()} operatorRole={active.role}/></section> : <p role="status">Empresa suspensa: reative-a antes de cadastrar novos usuários.</p>}

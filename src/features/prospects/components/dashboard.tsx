@@ -17,7 +17,7 @@ export function Dashboard() {
           <h2 className="font-display text-lg text-[var(--accent-dark)]">Encontre novos prospects agora</h2>
           <p className="mt-1 max-w-xl text-[13px] text-[#3e6a5b]">A IA analisa milhares de empresas e entrega só as que fazem sentido para o seu perfil.</p>
         </div>
-        <Link href="/buscar" className="shrink-0 rounded-lg bg-foreground px-4 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+        <Link href="/prospects?aba=buscar" className="shrink-0 rounded-lg bg-foreground px-4 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           Buscar prospects <span aria-hidden="true">→</span>
         </Link>
       </section>

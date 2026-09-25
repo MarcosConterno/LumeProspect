@@ -1,8 +1,11 @@
 import { getAccountIdentity } from "@/features/auth/context";
 import { ProfileMenu } from "./profile-menu";
 
-export async function AccountMenu() {
-  const { name, email } = await getAccountIdentity();
+type AccountIdentity = Awaited<ReturnType<typeof getAccountIdentity>>;
+
+export async function AccountMenu({ identity }: { identity?: AccountIdentity } = {}) {
+  const account = identity ?? await getAccountIdentity();
+  const { name, email } = account;
   return <ProfileMenu name={name} email={email} />;
 }
 

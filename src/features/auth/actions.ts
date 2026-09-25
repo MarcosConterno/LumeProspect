@@ -73,3 +73,20 @@ export async function selectWorkspace(form: FormData) {
   const destination = form.get("destination");
   redirect(destination === "/configuracoes/empresa" ? destination : "/dashboard");
 }
+
+export async function returnToLume() {
+  const { db } = await requireUser();
+  const master = await db.rpc("is_lume_master");
+  if (master.error) throw new Error("Não foi possível verificar seu acesso.");
+  if (!master.data) redirect("/dashboard");
+  const result = await db.from("workspaces").select("id").eq("is_lume", true).single();
+  if (result.error || !result.data) throw new Error("A base administrativa da Lume não está disponível.");
+  (await cookies()).set("lume-workspace", result.data.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  redirect("/lume");
+}

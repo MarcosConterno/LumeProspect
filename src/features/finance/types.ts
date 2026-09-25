@@ -5,7 +5,7 @@ export type CompanyChoice = { id: string; name: string };
 export type FinanceCategory = { id: string; name: string; kind: FinanceKind; active: boolean; version: number };
 export type FinanceEntry = {
   id: string; type: FinanceKind; companyId: string; companyName: string; categoryId: string; categoryName: string;
-  description: string; dueDate: string; amountCents: number; paidCents: number; hasPayments: boolean;
+  description: string; launchDate: string; dueDate: string; settlementDate: string | null; amountCents: number; paidCents: number; hasPayments: boolean;
   notes: string; cancelledAt: string | null; cancelReason: string | null; version: number;
 };
 export type FinancePermissions = { create: boolean; update: boolean; cancel: boolean; settle: boolean; reverse: boolean; categories: boolean };
@@ -22,8 +22,8 @@ export type FinanceSearch = {
 export type FinanceSnapshot = {
   workspace: string; today: string; month: string; page: number; count: number;
   entries: FinanceEntry[]; categories: FinanceCategory[]; permissions: FinancePermissions;
-  totals: { receivable: number; payable: number; received: number; paid: number };
-  monthly: { month: number; value: number }[]; expenses: { id: string; name: string; value: number }[];
+  totals: { receivable: number; payable: number; received: number; paid: number; overdue: number; overdueCount: number; receivableOpenCount: number; payableOpenCount: number };
+  monthly: { month: number; value?: number; receivable: number; payable: number }[]; expenses: { id: string; name: string; value: number }[];
   search: FinanceSearch;
 };
 export type FinanceDetail = {
@@ -31,6 +31,6 @@ export type FinanceDetail = {
   payments: { id: string; amountCents: number; paidOn: string; notes: string; reversedAt: string | null; reverseReason: string | null; actor: string }[];
   history: { id: string; event: string; details: Json; createdAt: string; actor: string }[];
 };
-export type EntryInput = { id: string; version?: number; type: FinanceKind; companyId: string; categoryId: string; description: string; dueDate: string; amountCents: number; notes: string };
+export type EntryInput = { id: string; version?: number; type: FinanceKind; companyId: string; categoryId: string; description: string; launchDate: string; dueDate: string; amountCents: number; notes: string };
 export type FinanceResult<T> = { data: T; error?: never } | { error: string; data?: never };
 

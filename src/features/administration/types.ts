@@ -2,7 +2,7 @@ export type RecordKind = "company" | "contact" | "service" | "workspace" | "prof
 export type RegistryKind = "company" | "contact" | "service";
 export type Values = Record<string, string>;
 export type SaveState = { error?: string };
-export type SaveTarget = { kind: RecordKind; workspace: string; id?: string; version?: number };
+export type SaveTarget = { kind: RecordKind; workspace: string; id?: string; version?: number; companyId?: string; returnTo?: string };
 export type CompanyOption = { id: string; name: string; lifecycle_status: string };
 export type RegistryRow = { id: string; name: string; detail: string; status: string };
 export type FieldDefinition = {
@@ -10,7 +10,7 @@ export type FieldDefinition = {
   required?: boolean; maxLength?: number; options?: readonly (readonly [string, string])[];
 };
 export const registryConfig = {
-  company: { path: "/clientes", title: "Clientes e empresas", singular: "empresa", description: "Empresas atendidas pelo CRM, cadastradas independentemente da prospecção." },
+  company: { path: "/clientes", title: "Clientes", singular: "cliente", description: "Empresas atendidas pela sua operação, cadastradas independentemente da prospecção." },
   contact: { path: "/contatos", title: "Contatos", singular: "contato", description: "Pessoas de contato vinculadas às empresas atendidas." },
   service: { path: "/configuracoes/servicos", title: "Serviços", singular: "serviço", description: "Catálogo de serviços para os negócios do CRM." },
 } as const;

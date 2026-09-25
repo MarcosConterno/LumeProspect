@@ -8,12 +8,13 @@ import { fields, type CompanyOption, type SaveTarget, type Values } from "../typ
 const inputClass = "mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm disabled:opacity-70";
 const buttonClass = "rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50";
 
-function CompanyField({ workspace, initial }: { workspace: string; initial: CompanyOption | null }) {
+function CompanyField({ workspace, initial, locked = false }: { workspace: string; initial: CompanyOption | null; locked?: boolean }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(initial?.id ?? "");
   const [options, setOptions] = useState<CompanyOption[]>(initial ? [initial] : []);
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
+  if (locked && initial) return <div className="space-y-2 sm:col-span-2"><label className="block text-sm">Cliente vinculado<input type="hidden" name="company_id" value={initial.id}/><span className={inputClass + " block"}>{initial.name}</span></label><p className="text-xs text-[var(--ink-soft)]">Este contato pertence a este cliente. Para consultar outro cadastro, volte à lista de Clientes.</p></div>;
   return <div className="space-y-2 sm:col-span-2">
     <label className="block text-sm">Buscar empresa pelo nome
       <input type="search" value={query} maxLength={100} onChange={event => setQuery(event.target.value)} className={inputClass} />
@@ -27,7 +28,7 @@ function CompanyField({ workspace, initial }: { workspace: string; initial: Comp
         const current = previous.find(option => option.id === selected);
         return current && !found.some(option => option.id === current.id) ? [current,...found] : found;
       });
-      setMessage(found.length === 20 ? "Exibindo até 20 resultados. Refine o nome para encontrar outra empresa." : found.length ? "Selecione uma empresa abaixo." : "Nenhuma empresa ativa encontrada. Cadastre-a em Clientes e empresas.");
+      setMessage(found.length === 20 ? "Exibindo até 20 resultados. Refine o nome para encontrar outra empresa." : found.length ? "Selecione uma empresa abaixo." : "Nenhuma empresa ativa encontrada. Cadastre-a em Clientes.");
       } catch { setMessage("A busca falhou. Confira sua conexão e tente novamente."); }
     })}>{pending ? "Buscando…" : "Buscar empresas"}</button>
     <label className="block text-sm">Empresa vinculada *
@@ -40,8 +41,8 @@ function CompanyField({ workspace, initial }: { workspace: string; initial: Comp
   </div>;
 }
 
-export function RecordForm({ target, initial = {}, selectedCompany = null, readOnly = false, cancelHref }: {
-  target: SaveTarget; initial?: Values; selectedCompany?: CompanyOption | null; readOnly?: boolean; cancelHref: string;
+export function RecordForm({ target, initial = {}, selectedCompany = null, readOnly = false, cancelHref, companyLocked = false }: {
+  target: SaveTarget; initial?: Values; selectedCompany?: CompanyOption | null; readOnly?: boolean; cancelHref: string; companyLocked?: boolean;
 }) {
   const [values, setValues] = useState<Values>(() => Object.fromEntries(fields[target.kind].map(field =>
     [field.name, initial[field.name] ?? field.options?.[0]?.[0] ?? ""]
@@ -50,7 +51,7 @@ export function RecordForm({ target, initial = {}, selectedCompany = null, readO
   return <form action={action} className="space-y-5">
     <fieldset disabled={readOnly || pending} className="grid gap-4 sm:grid-cols-2">
       <legend className="sr-only">Dados do cadastro</legend>
-      {target.kind === "contact" && <CompanyField workspace={target.workspace} initial={selectedCompany} />}
+      {target.kind === "contact" && <CompanyField workspace={target.workspace} initial={selectedCompany} locked={companyLocked} />}
       {fields[target.kind].map(field => <label key={field.name} className={`block text-sm ${field.type === "textarea" ? "sm:col-span-2" : ""}`}>
         {field.label}{field.required ? " *" : ""}
         {field.type === "select" ? <select name={field.name} value={values[field.name]} onChange={event => setValues(current => ({...current,[field.name]:event.target.value}))} className={inputClass}>

@@ -3,6 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const protectedRoute = /^\/(lume|dashboard|clientes|contatos|perfil|crm|equipe|prospects|buscar|agenda|favoritos|financeiro|relatorios|servicos|configuracoes|onboarding|redefinir-senha)(\/|$)/.test(request.nextUrl.pathname);
+  if (!protectedRoute) {
+    response.headers.set("Referrer-Policy", "same-origin");
+    return response;
+  }
   const db = createServerClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
     cookies: {
       getAll: () => request.cookies.getAll(),
@@ -13,9 +18,11 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  const { data: { user } } = await db.auth.getUser();
-  const protectedRoute = /^\/(lume|dashboard|clientes|contatos|perfil|crm|equipe|prospects|buscar|agenda|favoritos|financeiro|relatorios|servicos|configuracoes|onboarding|redefinir-senha)(\/|$)/.test(request.nextUrl.pathname);
-  if (!user && protectedRoute) {
+  // A autorização real continua em requireUser()/requireWorkspace() no servidor.
+  // Aqui só usamos a sessão para renovar cookies e cortar navegações anônimas cedo,
+  // evitando uma segunda validação remota de usuário em toda página protegida.
+  const { data: { session } } = await db.auth.getSession();
+  if (!session && protectedRoute) {
     const loginUrl = new URL("/login", request.url);
     if (request.nextUrl.pathname === "/redefinir-senha") {
       loginUrl.pathname = "/auth/link-error";

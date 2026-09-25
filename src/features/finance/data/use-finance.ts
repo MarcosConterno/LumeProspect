@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { refreshFinance } from "../actions";
 import type { FinanceFilters, FinanceSnapshot } from "../types";
@@ -13,9 +13,15 @@ export function useFinance(initial: FinanceSnapshot) {
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
   const refresh = useCallback(() => setRevision(n => n + 1), []);
+  const hydrated = useRef(false);
 
   useEffect(() => {
     let disposed = false;
+    if (!hydrated.current) {
+      hydrated.current = true;
+      setSettledFilters(filters);
+      return () => { disposed = true; };
+    }
     const fetchSnapshot = async () => {
       setLoading(true);
       try {
@@ -38,7 +44,7 @@ export function useFinance(initial: FinanceSnapshot) {
     const channel = db.channel("finance:" + initial.workspace)
       .on("postgres_changes", {event:"*",schema:"public",table:"finance_entries",filter:"workspace_id=eq." + initial.workspace}, refresh)
       .on("postgres_changes", {event:"*",schema:"public",table:"finance_categories",filter:"workspace_id=eq." + initial.workspace}, refresh)
-      .subscribe(status => {if(!disposed) {setLive(status === "SUBSCRIBED"); if(status === "SUBSCRIBED") refresh();}});
+      .subscribe(status => {if(!disposed) setLive(status === "SUBSCRIBED");});
     const interval = setInterval(onVisible, 60000);
     window.addEventListener("focus", onVisible);
     document.addEventListener("visibilitychange", onVisible);

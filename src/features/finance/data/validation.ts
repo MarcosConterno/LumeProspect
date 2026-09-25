@@ -19,6 +19,10 @@ export function parseAmount(value: string) {
   const [whole,fraction=""]=normalized.split(".");
   return cents(Number(whole)*100+Number(fraction.padEnd(2,"0")));
 }
+export function parseMaskedAmount(value: string) {
+  const normalized=value.replace(/[^\d,]/g,"").replace(",",".");
+  return parseAmount(normalized);
+}
 export function text(value: string, min: number, max: number) {
   const result=value.trim();
   if(result.length<min||result.length>max) throw new Error("Confira os campos obrigatórios e o tamanho do texto.");
@@ -31,7 +35,7 @@ export function version(value: number) {
 export function validateEntry(input: EntryInput): EntryInput {
   if(!["receivable","payable"].includes(input.type)) throw new Error("Tipo de lançamento inválido.");
   return {...input,id:uuid(input.id),version:input.version===undefined?undefined:version(input.version),companyId:uuid(input.companyId),categoryId:uuid(input.categoryId),
-    description:text(input.description,2,160),notes:text(input.notes,0,4000),dueDate:date(input.dueDate),amountCents:cents(input.amountCents)};
+    description:text(input.description,2,160),notes:text(input.notes,0,4000),launchDate:date(input.launchDate),dueDate:date(input.dueDate),amountCents:cents(input.amountCents)};
 }
 export function validateFilters(input: FinanceFilters): FinanceFilters {
   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(input.month)) throw new Error("Selecione um mês válido.");

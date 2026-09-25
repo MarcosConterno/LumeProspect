@@ -1,14 +1,12 @@
 export const navigation = [
   ["Visão geral", "/dashboard", "dashboard"],
-  ["Clientes e empresas", "/clientes", "prospects"],
-  ["Contatos", "/contatos", "prospects"],
+  ["Favoritos", "/favoritos", "favoritos"],
+  ["Clientes", "/clientes", "prospects"],
   ["Serviços", "/servicos", "servicos"],
   ["CRM", "/crm", "crm"],
   ["Financeiro", "/financeiro", "financeiro"],
   ["Agenda", "/agenda", "agenda"],
-  ["Buscar", "/buscar", "search"],
   ["Prospects", "/prospects", "prospects"],
-  ["Favoritos", "/favoritos", "favoritos"],
   ["Configurações", "/configuracoes", "configuracoes"],
 ] as const;
 
@@ -18,7 +16,7 @@ const routeModules: Record<string,string> = {
   "/buscar":"prospeccao", "/prospects":"prospeccao", "/favoritos":"prospeccao",
 };
 export const platformNavigation = [
-  ["Clientes e ambientes", "/lume", "prospects"],
+  ["Ambientes", "/lume", "ambientes"],
   ...navigation,
 ] as const;
 export function filteredNavigation(allowedModules: string[]) {

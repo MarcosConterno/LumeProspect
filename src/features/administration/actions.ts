@@ -22,6 +22,7 @@ export async function saveMaster(target: SaveTarget, _previous: SaveState, form:
     const { db, active, user } = await administrationContext(target.workspace);
     if (["company","contact","service"].includes(target.kind)) await requireModule("crm",target.id ? "update" : "create");
     const values = validateValues(target.kind, form);
+    if (target.kind === "contact" && target.companyId && values.company_id !== target.companyId) throw new Error("Este contato deve permanecer vinculado ao cliente selecionado.");
     const workspace = active.workspace_id;
     if (target.id) {
       validId(target.id);
@@ -36,20 +37,20 @@ export async function saveMaster(target: SaveTarget, _previous: SaveState, form:
       result = target.id
         ? await db.from("companies").update(record).eq("workspace_id",workspace).eq("id",target.id).eq("version",target.version!).select("id")
         : await db.from("companies").insert({ ...record, workspace_id:workspace }).select("id");
-      destination = registryConfig.company.path;
+      destination = target.returnTo && /^\/clientes\/[0-9a-f-]{36}(?:\?.*)?$/i.test(target.returnTo) ? target.returnTo : registryConfig.company.path;
     } else if (target.kind === "contact") {
       const record = { name:values.name, company_id:values.company_id, role:optional("role"), email:optional("email"),
         phone:optional("phone"), website:optional("website"), linkedin_url:optional("linkedin_url"), active:values.active === "true" };
       result = target.id
         ? await db.from("contacts").update(record).eq("workspace_id",workspace).eq("id",target.id).eq("version",target.version!).select("id")
         : await db.from("contacts").insert({ ...record, workspace_id:workspace }).select("id");
-      destination = registryConfig.contact.path;
+      destination = target.returnTo && /^\/clientes\/[0-9a-f-]{36}(?:\?.*)?$/i.test(target.returnTo) ? target.returnTo : registryConfig.contact.path;
     } else if (target.kind === "service") {
       const record = { name:values.name, description:values.description, active:values.active === "true" };
       result = target.id
         ? await db.from("services").update(record).eq("workspace_id",workspace).eq("id",target.id).eq("version",target.version!).select("id")
         : await db.from("services").insert({ ...record, workspace_id:workspace }).select("id");
-      destination = registryConfig.service.path;
+      destination = target.returnTo && /^(?:\/servicos|\/configuracoes\/servicos)(?:\?.*)?$/i.test(target.returnTo) ? target.returnTo : registryConfig.service.path;
     } else if (target.kind === "workspace") {
       if (!["owner","admin"].includes(active.role) || target.id !== workspace) throw new Error("Somente o proprietário e administradores podem editar a empresa.");
       result = await db.from("workspaces").update({ name:values.name, legal_name:optional("legal_name"),

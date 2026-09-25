@@ -1051,6 +1051,7 @@ export type Database = {
       // Pending migration: 20260915120000_finance_search_reports.sql
       finance_search_entries: { Args: { target: string; filters: Json; export_all?: boolean }; Returns: Json }
       // Pending migration: 20260914220000_company_finance.sql
+      finance_dashboard: { Args: { target: string; selected_month: string }; Returns: Json }
       finance_snapshot: { Args: { target: string; filters: Json }; Returns: Json }
       finance_search_companies: { Args: { target: string; query: string }; Returns: Json }
       finance_entry_detail: { Args: { target: string; entry: string }; Returns: Json }

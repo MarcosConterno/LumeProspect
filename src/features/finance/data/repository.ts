@@ -1,12 +1,12 @@
 import "server-only";
-import { requireWorkspace } from "@/features/auth/context";
+import { requireModule } from "@/features/auth/module-access";
 import { uuid, validateFilters } from "./validation";
 import type { FinanceFilters, FinanceSnapshot, FinanceDetail, CompanyChoice, FinanceSearch } from "../types";
 import type { Json } from "@/types/database";
 
 export function financeError(error: {code?: string;message?: string}|null) {
   if(!error) return;
-  if(["PGRST202","42P01","42883"].includes(error.code ?? "")) throw new Error("A estrutura financeira ainda não foi aplicada. Execute o arquivo 20260914220000_company_finance.sql no Supabase.");
+  if(["PGRST202","42P01","42883"].includes(error.code ?? "")) throw new Error("A estrutura financeira ainda não foi aplicada. Execute as migrations financeiras pendentes no Supabase, incluindo 20260925160000_finance_entry_dates.sql.");
   if(error.code==="42501") throw new Error("Você não tem permissão para esta operação financeira.");
   if(error.code==="40001") throw new Error("Este registro mudou em outra sessão. Recarregue os dados antes de salvar.");
   const message=error.message ?? "";
@@ -23,11 +23,8 @@ export function financeError(error: {code?: string;message?: string}|null) {
   throw new Error("Não foi possível acessar o financeiro. Tente novamente.");
 }
 export async function financeContext(expected?: string) {
-  const context=await requireWorkspace();
+  const context=await requireModule("financeiro");
   if(expected&&context.active.workspace_id!==uuid(expected)) throw new Error("A empresa ativa mudou. Recarregue a página.");
-  const result=await context.db.rpc("module_access",{target:context.active.workspace_id,product:"financeiro",operation:"read"});
-  financeError(result.error);
-  if(!result.data) throw new Error("Seu acesso ao financeiro não está disponível.");
   return context;
 }
 export function todayInSaoPaulo() {
@@ -40,22 +37,26 @@ function requiredJson<T>(data: Json | null): T {
 export async function loadFinance(workspace: string, filters: FinanceFilters) {
   const {db}=await financeContext(workspace);
   const checked = validateFilters(filters);
-  const [result,search] = await Promise.all([
+  const [result,search,dashboard] = await Promise.all([
     db.rpc("finance_snapshot",{target:workspace,filters:{month:checked.month,type:"all",status:"all",query:"",page:1}}),
     db.rpc("finance_search_entries",{target:workspace,filters:{...checked}}),
+    db.rpc("finance_dashboard",{target:workspace,selected_month:checked.month}),
   ]);
   financeError(result.error);
   financeSearchError(search.error);
+  financeError(dashboard.error);
   const matches = requiredJson<FinanceSearch>(search.data);
-  return {...requiredJson<Omit<FinanceSnapshot,"search">>(result.data),entries:matches.entries,count:matches.count,page:matches.page,search:matches};
+  const metrics = requiredJson<{overdue:number;overdueCount:number;receivableOpenCount:number;payableOpenCount:number;monthly:{month:number;receivable:number;payable:number}[]}>(dashboard.data);
+  const snapshot = requiredJson<Omit<FinanceSnapshot,"search">>(result.data);
+  return {...snapshot,totals:{...snapshot.totals,overdue:metrics.overdue,overdueCount:metrics.overdueCount,receivableOpenCount:metrics.receivableOpenCount,payableOpenCount:metrics.payableOpenCount},monthly:metrics.monthly,entries:matches.entries,count:matches.count,page:matches.page,search:matches};
 }
 
-export async function loadFinanceSettings(workspace: string) {
-  const {db}=await financeContext(workspace);
-  const result=await db.rpc("finance_snapshot",{target:workspace,filters:{month:todayInSaoPaulo().slice(0,7),type:"all",status:"all",query:"",page:1}});
+export async function loadFinanceSettings(workspace?: string) {
+  const {db,active}=await financeContext(workspace);
+  const result=await db.rpc("finance_snapshot",{target:active.workspace_id,filters:{month:todayInSaoPaulo().slice(0,7),type:"all",status:"all",query:"",page:1}});
   financeError(result.error);
   const snapshot=requiredJson<FinanceSnapshot>(result.data);
-  return {categories:snapshot.categories,canManage:snapshot.permissions.categories};
+  return {active,categories:snapshot.categories,canManage:snapshot.permissions.categories};
 }
 
 function financeSearchError(error: {code?:string;message?:string}|null) {
