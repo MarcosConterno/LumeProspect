@@ -15,7 +15,7 @@
 .profile-identity > div { min-width: 0; }
 .profile-identity strong { display: block; font-size: 13px; font-weight: 600; color: var(--foreground); }
 .profile-identity > div > span { display: block; margin-top: 4px; font-size: 12px; color: var(--ink-soft); overflow-wrap: anywhere; }
-.profile-popover nav a, .profile-popover form button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 50px; padding: 12px 18px; font-size: 13px; color: var(--ink-soft); text-align: left; }
+.profile-popover nav a, .profile-popover form button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 50px; border: 0; border-radius: 0; background: transparent; padding: 12px 18px; color: var(--ink-soft); font-size: 13px; text-align: left; }
 .profile-popover nav a:hover, .profile-popover form button:hover { background: var(--background); color: var(--accent-dark); }
 .profile-popover nav a + a, .profile-popover form { border-top: 1px solid var(--border-soft); }
 .profile-link-arrow { margin-left: auto; color: var(--ink-faint); }
@@ -55,8 +55,8 @@ a, button, input, textarea, select, summary { -webkit-tap-highlight-color: trans
   background: color-mix(in srgb, var(--surface) 76%, var(--background)); transition: width .2s ease;
 }
 .sidebar-heading { position: relative; display: flex; align-items: center; gap: 8px; min-height: 40px; margin-bottom: 26px; padding-inline: 6px; }
-.sidebar-toggle { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 32px; border-radius: 7px; color: var(--ink-soft); font-size: 21px; }
-.sidebar-toggle:hover { background: var(--accent-soft); color: var(--accent-dark); }
+.sidebar-toggle { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 32px; border: 1px solid #b8d9c9; border-radius: 7px; background: var(--surface); padding: 0; color: var(--accent-dark); font-size: 21px; }
+.sidebar-toggle:hover { border-color: var(--accent-dark); background: var(--accent-dark); color: #fff; }
 .is-collapsed .sidebar-heading { padding: 0; justify-content: center; }
 .is-collapsed .sidebar-toggle { position: absolute; right: -29px; top: 4px; width: 24px; border: 1px solid var(--border); background: var(--background); }
 .sidebar-navigation { display: flex; flex: 1; min-height: 0; flex-direction: column; gap: 4px; overflow-y: auto; padding-block: 4px; }
@@ -105,10 +105,13 @@ a, button, input, textarea, select, summary { -webkit-tap-highlight-color: trans
   border-radius: 10px;
   box-shadow: 0 1px 2px rgb(20 55 43 / 8%);
   font-weight: 600;
+  border: 1px solid #b8d9c9;
+  background: var(--surface);
+  color: var(--accent-dark);
   transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease;
 }
 .app-content :where(button, a)[class*="bg-accent"]:hover,
-.app-content :where(button, a)[class*="bg-foreground"]:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgb(20 55 43 / 12%); }
+.app-content :where(button, a)[class*="bg-foreground"]:hover { transform: translateY(-1px); border-color: var(--accent-dark); background: var(--accent-dark); color: #fff; box-shadow: 0 5px 14px rgb(20 55 43 / 12%); }
 .app-content :where(button, a)[class*="border-border"] { border-radius: 10px; transition: border-color .16s ease, background-color .16s ease, color .16s ease; }
 .app-content :where(button, a)[class*="border-border"]:hover { border-color: color-mix(in srgb, var(--accent) 38%, var(--border)); background: var(--accent-soft); }
 .app-content :where(input, select, textarea) { border-color: var(--border); border-radius: 10px; background: var(--surface); transition: border-color .16s ease, box-shadow .16s ease; }
@@ -218,7 +221,21 @@ select {
 
 button {
   cursor: pointer;
+  border: 1px solid #b8d9c9;
+  border-radius: 9px;
+  background: var(--surface);
+  padding: 8px 12px;
+  color: var(--accent-dark);
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
+
+button:hover:not(:disabled):not([aria-disabled="true"]) {
+  border-color: var(--accent-dark);
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+button:active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
 
 ::selection {
   background: var(--accent-soft);

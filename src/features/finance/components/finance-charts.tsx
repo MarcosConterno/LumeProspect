@@ -68,26 +68,39 @@ function MonthlySummary({ snapshot }: { snapshot: FinanceSnapshot }) {
 }
 
 function ExpensesByCategory({ snapshot }: { snapshot: FinanceSnapshot }) {
-  const expenses = snapshot.expenses.filter(item => item.value > 0);
+  const expenses = snapshot.expenses.filter(item => item.value > 0).sort((a, b) => b.value - a.value);
   const leadingExpenses = expenses.slice(0, 4);
   const remainingValue = expenses.slice(4).reduce((sum, item) => sum + item.value, 0);
   const data = remainingValue > 0
     ? [...leadingExpenses, { id: "other-expenses", name: "Outros", value: remainingValue }]
     : leadingExpenses;
   const total = data.reduce((sum, item) => sum + item.value, 0);
+  const segmentGap = data.length > 1 ? 1.5 : 0;
+  const availableAngle = 360 - segmentGap * data.length;
   const gradient = data.reduce<{ cursor: number; stops: string[] }>((state, item, index) => {
-    const start = total ? state.cursor / total * 100 : 0;
-    const end = total ? (state.cursor + item.value) / total * 100 : 0;
-    return { cursor: state.cursor + item.value, stops: [...state.stops, `${chartColors[index % chartColors.length]} ${start}% ${end}%`] };
+    const start = total ? index * segmentGap + state.cursor / total * availableAngle : 0;
+    const end = total ? index * segmentGap + (state.cursor + item.value) / total * availableAngle : 0;
+    const gap = segmentGap ? `, transparent ${end}deg ${end + segmentGap}deg` : "";
+    return { cursor: state.cursor + item.value, stops: [...state.stops, `${chartColors[index % chartColors.length]} ${start}deg ${end}deg${gap}`] };
   }, { cursor: 0, stops: [] }).stops.join(", ");
   return <section className="finance-chart-card finance-expense-card">
     <div className="finance-dashboard-card-heading"><div><h2>Despesas por categoria</h2><p>Vencimentos no mês</p></div><span className="finance-chart-period">Este mês</span></div>
     {total ? <div className="finance-expense-content">
-      <div className="finance-donut" style={{ background: `conic-gradient(${gradient})` }} aria-label={`Despesas por categoria: ${money(total)}`} role="img">
-        <div className="finance-donut-center"><strong>{compactMoney(total)}</strong><span>Total</span></div>
+      <div className="finance-donut-wrap">
+        <div className="finance-donut" style={{ backgroundImage: `conic-gradient(${gradient})` }} aria-label={`Despesas por categoria: ${money(total)}`} role="img">
+          <div className="finance-donut-center"><span>Total</span><strong>{compactMoney(total)}</strong><small>no mês</small></div>
+        </div>
       </div>
-      <ul className="finance-legend-list" aria-label="Tipos de despesas">
-        {data.map((item, index) => <li key={item.id}><i style={{ background: chartColors[index % chartColors.length] }}/><span>{item.name}</span><strong>{Math.round(item.value / total * 100)}%</strong></li>)}
+      <ul className="finance-legend-list" aria-label="Despesas por categoria">
+        {data.map((item, index) => {
+          const percentage = Math.round(item.value / total * 100);
+          const color = chartColors[index % chartColors.length];
+          return <li key={item.id}>
+            <div className="finance-legend-row"><span className="finance-legend-name"><i style={{ background: color }}/><span title={item.name}>{item.name}</span></span><strong>{percentage}%</strong></div>
+            <div className="finance-legend-meta"><span>{money(item.value)}</span><span>{percentage === 100 ? "Todas as despesas" : "do total"}</span></div>
+            <span className="finance-legend-track"><span style={{ width: `${percentage}%`, background: color }}/></span>
+          </li>;
+        })}
       </ul>
     </div> : <div className="finance-chart-empty-note">Nenhuma despesa neste período.</div>}
   </section>;

@@ -7,8 +7,8 @@ import type { CompanyChoice, FinanceCategory, FinanceEntry, FinanceKind } from "
 import { CompanySearch } from "./company-search";
 import { CategorySelect } from "./category-select";
 
-export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{workspace:string;categories:FinanceCategory[];today:string;entry?:FinanceEntry;onSaved:()=>void;onClose:()=>void}) {
-  const [kind,setKind] = useState<FinanceKind>(entry?.type ?? "receivable");
+export function EntryForm({workspace,categories,today,entry,initialKind="receivable",kindLocked=false,onSaved,onClose}:{workspace:string;categories:FinanceCategory[];today:string;entry?:FinanceEntry;initialKind?:FinanceKind;kindLocked?:boolean;onSaved:()=>void;onClose:()=>void}) {
+  const [kind,setKind] = useState<FinanceKind>(entry?.type ?? initialKind);
   const [company,setCompany] = useState<CompanyChoice|null>(entry ? {id:entry.companyId,name:entry.companyName} : null);
   const [category,setCategory] = useState(entry?.categoryId ?? "");
   const [launchDate,setLaunchDate] = useState(entry?.launchDate ?? today);
@@ -18,6 +18,7 @@ export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{wo
   const requestId = useRef(entry?.id ?? "");
   const [original] = useState(entry);
   const locked = Boolean(original?.hasPayments);
+  const typeLocked = locked || kindLocked;
   async function submit(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();if(pending) return;
     const form = new FormData(event.currentTarget);
@@ -35,7 +36,7 @@ export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{wo
   return <form onSubmit={submit}><fieldset disabled={pending} className="finance-entry-form">
     <h3 className="finance-wide">{original ? "Editar lançamento" : "Novo lançamento"}</h3>
     {locked && <p className="finance-form-note">O histórico de baixas preserva tipo, pessoa/empresa, categoria e valor.</p>}
-    <label>Tipo<select value={kind} disabled={locked} onChange={e=>{setKind(e.target.value as FinanceKind);setCategory("");}}><option value="receivable">Conta a receber</option><option value="payable">Conta a pagar</option></select></label>
+    <label>Tipo<select value={kind} disabled={typeLocked} onChange={e=>{setKind(e.target.value as FinanceKind);setCategory("");}}><option value="receivable">Conta a receber</option><option value="payable">Conta a pagar</option></select></label>
     <label>Data de lançamento<input type="date" name="launchDate" required min="1900-01-01" max="2100-12-31" value={launchDate} onChange={event=>setLaunchDate(event.target.value)}/></label>
     <label>Vencimento<input type="date" name="date" required min="1900-01-01" max="2100-12-31" defaultValue={original?.dueDate ?? today}/></label>
     <label className="finance-wide">Descrição<input name="description" required minLength={2} maxLength={160} defaultValue={original?.description}/></label>
@@ -45,6 +46,6 @@ export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{wo
     <label>Valor (R$)<input name="amount" inputMode="numeric" required disabled={locked} value={locked ? money(original!.amountCents) : amount} onChange={event=>setAmount(currencyMask(event.target.value))} placeholder="R$ 0,00"/></label>
     <label className="finance-wide">Observações<textarea name="notes" maxLength={4000} rows={3} defaultValue={original?.notes}/></label>
     {error && <p role="alert" className="finance-wide finance-coral">{error}</p>}
-    <div className="finance-actions finance-wide"><button className="finance-primary" disabled={pending}>{pending ? "Salvando..." : "Salvar lançamento"}</button><button type="button" className="lume-button lume-button--ghost" onClick={onClose}>Fechar</button></div>
+    <div className="finance-actions finance-wide"><button className="finance-primary" disabled={pending}>{pending ? "Salvando..." : entry ? "Salvar alterações" : "Salvar lançamento"}</button><button type="button" className="lume-button lume-button--ghost" onClick={onClose}>Cancelar</button></div>
   </fieldset></form>;
 }

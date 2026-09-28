@@ -2,10 +2,10 @@
 import { useRef, useState } from "react";
 import { useFinance } from "../data/use-finance";
 import { dateLabel, entryStatus, money, percentChange, percentLabel } from "../format";
-import type { FinanceFilters, FinanceSnapshot } from "../types";
+import type { FinanceFilters, FinanceKind, FinanceSnapshot } from "../types";
 import Link from "next/link";
+import { EntryCreatePanel } from "./entry-create-panel";
 import { EntryDetail } from "./entry-detail";
-import { EntryForm } from "./entry-form";
 import { FinanceCharts } from "./finance-charts";
 import { FinanceMovements } from "./finance-movements";
 import { FinanceReversedMovements } from "./finance-reversed-movements";
@@ -14,6 +14,7 @@ import { financeReportUrl } from "../data/validation";
 import { SearchResultsDialog } from "./search-results-dialog";
 
 const pageSize=10;
+type FinanceView="overview"|"entries"|"incomes"|"outcomes"|"reversed";
 const quickStatuses = [["all","Situação"],["any","Todos, inclusive cancelados"],["open","Em aberto"],["overdue","Em atraso"],["partial","Baixa parcial"],["settled","Pagos e recebidos"],["cancelled","Cancelados"]] as const;
 
 function monthShift(value:string, offset:number) {
@@ -42,12 +43,16 @@ function MetricIcon({name}:{name:string}) {
 export function FinanceWorkspace({initial}:{initial:FinanceSnapshot}) {
   const {snapshot,filters,setFilters,error,live,loading,refresh}=useFinance(initial);
   const [selected,setSelected]=useState<string|null>(null);
+  const [editingEntry,setEditingEntry]=useState<string|null>(null);
   const [showForm,setShowForm]=useState(false);
+  const [createKind,setCreateKind]=useState<FinanceKind>("receivable");
+  const [createKindLocked,setCreateKindLocked]=useState(false);
   const [showFilters,setShowFilters]=useState(false);
   const [searchFilters,setSearchFilters]=useState<FinanceFilters>(()=>({month:initial.month,type:"all",status:"all",query:"",page:1}));
   const [searchReset,setSearchReset]=useState(0);
   const [showSearchResults,setShowSearchResults]=useState(false);
-  const [activeView,setActiveView]=useState<"overview"|"entries"|"incomes"|"outcomes"|"reversed">("overview");
+  const [activeView,setActiveView]=useState<FinanceView>("overview");
+  const [visitedViews,setVisitedViews]=useState<FinanceView[]>(["overview"]);
   const searchPanel=useRef<HTMLDivElement>(null);
   const [notice,setNotice]=useState("");
   const [queryDraft,setQueryDraft]=useState("");
@@ -63,9 +68,15 @@ export function FinanceWorkspace({initial}:{initial:FinanceSnapshot}) {
     {label:"Em atraso",value:snapshot.totals.overdue,note:`${snapshot.totals.overdueCount} lançamento${snapshot.totals.overdueCount === 1 ? "" : "s"} vencido${snapshot.totals.overdueCount === 1 ? "" : "s"}`,tone:"coral",icon:"◷",primary:false},
   ];
   function saved() {setNotice("Alteração salva. Atualizando os valores...");refresh();}
-  function selectView(view:"overview"|"entries"|"incomes"|"outcomes"|"reversed") {
-    setSelected(null);
-    if(view!=="entries") setShowForm(false);
+  function openCreate(kind?:FinanceKind) {setSelected(null);setCreateKind(kind ?? "receivable");setCreateKindLocked(kind !== undefined);setShowForm(true);}
+  function openCreateFromEntries() {openCreate(filters.type === "receivable" ? "receivable" : filters.type === "payable" ? "payable" : undefined);}
+  function prepareView(view:FinanceView) {
+    setVisitedViews(current=>current.includes(view) ? current : [...current,view]);
+  }
+  function selectView(view:FinanceView) {
+    setSelected(null);setEditingEntry(null);
+    setShowForm(false);
+    prepareView(view);
     setActiveView(view);
   }
   return <div className="finance-workspace">
@@ -85,12 +96,11 @@ export function FinanceWorkspace({initial}:{initial:FinanceSnapshot}) {
         <section className="finance-metrics" aria-label={"Resumo de "+snapshot.month}>{totals.map(total=><article key={total.label} className={`${total.primary ? "is-primary" : ""}${total.primary && total.value < 0 ? " is-negative" : ""}`}><div className="finance-metric-heading"><span className={`finance-metric-icon is-${total.tone}`} aria-hidden="true"><MetricIcon name={total.label}/></span><p>{total.label}</p></div><strong className={"finance-"+total.tone}>{total.value < 0 ? "− " : ""}{money(Math.abs(total.value))}</strong><span>{total.note}</span></article>)}</section>
         <FinanceCharts snapshot={snapshot} onOpenEntries={()=>selectView("entries")} onOpenEntry={id=>{selectView("entries");setSelected(id);}}/>
       </>}
-      {activeView === "entries" && <section id="finance-lancamentos" className="finance-ledger" aria-label="Lançamentos financeiros" aria-busy={loading}>
-          <div className="finance-section-heading"><div><h2>Lançamentos</h2><p>Títulos por vencimento e situação</p></div><div className="finance-actions">
+      {(activeView === "entries" || visitedViews.includes("entries")) && <section id="finance-lancamentos" hidden={activeView !== "entries"} className="finance-ledger" aria-label="Lançamentos financeiros" aria-busy={activeView === "entries" && loading}>
+          <div className="finance-section-heading"><div><h2>Lançamentos</h2><p>Contas a pagar e receber</p></div><div className="finance-actions">
             {snapshot.permissions.categories && <Link href="/configuracoes/financeiro">Configurações</Link>}
-            {snapshot.permissions.create && <button type="button" className="finance-primary" onClick={()=>setShowForm(value=>!value)} aria-expanded={showForm}>{showForm ? "Fechar cadastro" : "+ Novo lançamento"}</button>}
+            {snapshot.permissions.create && <button type="button" className="finance-primary" onClick={()=>showForm ? setShowForm(false) : openCreateFromEntries()} aria-expanded={showForm}>{showForm ? "Fechar cadastro" : "+ Novo lançamento"}</button>}
           </div></div>
-          {showForm && snapshot.permissions.create && <EntryForm workspace={snapshot.workspace} categories={snapshot.categories} today={snapshot.today} onSaved={()=>{setShowForm(false);saved();}} onClose={()=>setShowForm(false)}/>}
           <>
           {notice && <p role="status" className="finance-local-notice">{loading ? notice : "Alteração salva."}</p>}
           <div className="finance-tabs" aria-label="Filtros dos lançamentos">{[["all","Todos","all"],["receivable","A receber","open"],["payable","A pagar","open"],["all","Vencidos","overdue"]].map(([type,label,status])=><button key={label} type="button" aria-pressed={filters.type===type && filters.status===status} onClick={()=>setFilters(current=>({...current,type,status,page:1}))}>{label}</button>)}</div>
@@ -110,18 +120,19 @@ export function FinanceWorkspace({initial}:{initial:FinanceSnapshot}) {
             <div><strong>{snapshot.count} lançamento{snapshot.count === 1 ? "" : "s"}</strong><span>Vencimentos de {dateLabel(snapshot.search.dateFrom)} a {dateLabel(snapshot.search.dateTo)}</span></div>
             {!loading && <a className="finance-primary" href={financeReportUrl(snapshot.workspace,filters)} target="_blank" rel="noopener noreferrer">Imprimir / PDF</a>}
           </div>
-          <div className="finance-table-scroll"><table className="finance-table"><caption className="sr-only">Contas do período. Clique na linha ou na descrição para abrir os detalhes.</caption><thead><tr><th scope="col">Descrição</th><th scope="col">Categoria</th><th scope="col">Datas</th><th scope="col">Situação</th><th scope="col">Valor</th></tr></thead><tbody>
-            {snapshot.entries.map(entry=><tr key={entry.id} data-type={entry.type} onClick={()=>setSelected(entry.id)}><td><button type="button" className="finance-entry-link" aria-expanded={selected===entry.id} onClick={()=>setSelected(entry.id)}>{entry.description}</button><small><span className="finance-entry-kind">{entry.type === "receivable" ? "A receber" : "A pagar"}</span> · {entry.type === "receivable" ? "Cliente" : "Fornecedor"}: {entry.companyName}</small><small>Lançado em {dateLabel(entry.launchDate || entry.dueDate)}</small></td><td><span className="finance-category-label">{entry.categoryName}</span></td><td className="finance-date-stack"><strong className="finance-due-date">Vence em {dateLabel(entry.dueDate)}</strong><small>{entry.settlementDate ? `${entry.type === "receivable" ? "Recebido" : "Pago"} em ${dateLabel(entry.settlementDate)}` : entry.type === "receivable" ? "Aguardando recebimento" : "Aguardando pagamento"}</small></td><td><span className={"finance-status "+(entry.cancelledAt ? "is-cancelled" : entry.paidCents===entry.amountCents ? "is-settled" : entry.dueDate<snapshot.today ? "is-overdue" : "is-open")}>{tableStatus(entry,snapshot.today)}</span></td><td className={entry.type==="receivable" ? "finance-green" : "finance-coral"}><strong>{entry.type==="receivable" ? "+ " : "− "}{money(entry.amountCents)}</strong>{entry.paidCents>0 && <small>Baixado: {money(entry.paidCents)}</small>}</td></tr>)}
+          <div className="finance-table-scroll"><table className="finance-table"><caption className="sr-only">Contas do período. Clique na linha para abrir os detalhes.</caption><thead><tr><th scope="col">Descrição</th><th scope="col">Cliente</th><th scope="col">Categoria</th><th scope="col">Vencimento</th><th scope="col">Situação</th><th scope="col">Valor</th><th scope="col">Ações</th></tr></thead><tbody>
+            {snapshot.entries.map(entry=><tr key={entry.id} data-type={entry.type} onClick={()=>{setEditingEntry(null);setSelected(entry.id);}}><td className="finance-table-description"><button type="button" className="finance-entry-link" aria-expanded={selected===entry.id && !editingEntry} onClick={event=>{event.stopPropagation();setEditingEntry(null);setSelected(entry.id);}}>{entry.description}</button><small>{entry.type === "receivable" ? "A receber" : "A pagar"}</small></td><td className="finance-table-company">{entry.companyName}</td><td className="finance-table-category"><span className="finance-category-label">{entry.categoryName}</span></td><td className="finance-table-date"><strong>{dateLabel(entry.dueDate)}</strong></td><td><span className={"finance-status "+(entry.cancelledAt ? "is-cancelled" : entry.paidCents===entry.amountCents ? "is-settled" : entry.dueDate<snapshot.today ? "is-overdue" : "is-open")}>{tableStatus(entry,snapshot.today)}</span></td><td className={`finance-table-value ${entry.type==="receivable" ? "finance-green" : "finance-coral"}`}><strong>{entry.type==="receivable" ? "+ " : "− "}{money(entry.amountCents)}</strong>{entry.paidCents>0 && <small>Baixado: {money(entry.paidCents)}</small>}</td><td className="finance-table-actions"><button type="button" className="finance-action-icon" title="Editar lançamento" aria-label={`Editar ${entry.description}`} onClick={event=>{event.stopPropagation();setSelected(entry.id);setEditingEntry(snapshot.permissions.update && !entry.cancelledAt ? entry.id : null);}}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m4 16-.8 4.8L8 20l11.3-11.3a2.2 2.2 0 0 0-3.1-3.1L4.9 16.9Z"/><path d="m14.8 6.2 3.1 3.1"/></svg></button><button type="button" className="finance-action-icon" title="Abrir ações" aria-label={`Abrir ações de ${entry.description}`} onClick={event=>{event.stopPropagation();setEditingEntry(null);setSelected(entry.id);}}>⋯</button></td></tr>)}
           </tbody></table></div>
           {!snapshot.entries.length && <div className="finance-empty"><h3>Nenhum lançamento encontrado</h3><p>Cadastre um lançamento ou ajuste o período e os filtros.</p></div>}
           <nav className="finance-pagination" aria-label="Páginas de lançamentos"><span className="finance-pagination-summary">{snapshot.count ? `Mostrando ${(snapshot.page-1)*pageSize+1} a ${Math.min(snapshot.page*pageSize,snapshot.count)} de ${snapshot.count} lançamentos` : "Nenhum lançamento"}</span><div className="finance-pagination-controls"><button type="button" disabled={loading || snapshot.page<=1} onClick={()=>setFilters(current=>({...current,page:snapshot.page-1}))}>Anterior</button><strong>{snapshot.page}</strong><button type="button" disabled={loading || snapshot.page*pageSize>=snapshot.count} onClick={()=>setFilters(current=>({...current,page:snapshot.page+1}))}>Próxima</button></div></nav>
-          {selected && <EntryDetail key={selected} id={selected} snapshot={snapshot} onSaved={saved} onClose={()=>setSelected(null)}/>}
+          {selected && <EntryDetail key={`${selected}:${editingEntry === selected ? "edit" : "view"}`} id={selected} snapshot={snapshot} initialEditing={editingEntry === selected} onSaved={saved} onClose={()=>{setSelected(null);setEditingEntry(null);}}/>}
           </>
       </section>}
-      {activeView === "incomes" && <section className="finance-ledger" aria-label="Entradas financeiras" aria-busy={loading}><FinanceMovements key={`${snapshot.month}:receivable`} snapshot={snapshot} kind="receivable" onSaved={saved}/></section>}
-      {activeView === "outcomes" && <section className="finance-ledger" aria-label="Saídas financeiras" aria-busy={loading}><FinanceMovements key={`${snapshot.month}:payable`} snapshot={snapshot} kind="payable" onSaved={saved}/></section>}
-      {activeView === "reversed" && <section className="finance-ledger" aria-label="Estornos financeiros" aria-busy={loading}><FinanceReversedMovements key={snapshot.month} snapshot={snapshot} onSaved={saved}/></section>}
+      {(activeView === "incomes" || visitedViews.includes("incomes")) && <section hidden={activeView !== "incomes"} className="finance-ledger" aria-label="Entradas financeiras" aria-busy={activeView === "incomes" && loading}><FinanceMovements key={`${snapshot.month}:receivable`} snapshot={snapshot} kind="receivable" onSaved={saved} onNew={()=>openCreate("receivable")}/></section>}
+      {(activeView === "outcomes" || visitedViews.includes("outcomes")) && <section hidden={activeView !== "outcomes"} className="finance-ledger" aria-label="Saídas financeiras" aria-busy={activeView === "outcomes" && loading}><FinanceMovements key={`${snapshot.month}:payable`} snapshot={snapshot} kind="payable" onSaved={saved} onNew={()=>openCreate("payable")}/></section>}
+      {(activeView === "reversed" || visitedViews.includes("reversed")) && <section hidden={activeView !== "reversed"} className="finance-ledger" aria-label="Estornos financeiros" aria-busy={activeView === "reversed" && loading}><FinanceReversedMovements key={snapshot.month} snapshot={snapshot} onSaved={saved}/></section>}
     </>}
+    {!error && showForm && snapshot.permissions.create && <EntryCreatePanel workspace={snapshot.workspace} categories={snapshot.categories} today={snapshot.today} kind={createKind} kindLocked={createKindLocked} onSaved={()=>{setShowForm(false);saved();}} onClose={()=>setShowForm(false)}/>}
     {showSearchResults && searchFilters && <SearchResultsDialog initialFilters={searchFilters} source={snapshot} returnFocusRef={searchPanel}
       onClose={()=>setShowSearchResults(false)} onSaved={refresh}/>}
   </div>;
