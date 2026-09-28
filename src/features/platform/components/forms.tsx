@@ -5,7 +5,7 @@ import { products, type PlatformState, type MemberPermission } from "../types";
 import { formatMonthlyPrice, getModulePlan, monthlyPrices } from "../pricing";
 import { assignableRoles, roleLabels } from "../roles";
 const input="mt-1 block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm";
-const button="rounded-lg bg-accent px-4 py-2 text-sm text-white disabled:opacity-50";
+const button="lume-button lume-button--solid disabled:opacity-50";
 function Feedback({state}:{state:PlatformState}) {
   return <div className="space-y-2 text-sm">{state.error&&<p role="alert" className="text-red-700">{state.error}</p>}{state.message&&<p role="status">{state.message}</p>}</div>;
 }

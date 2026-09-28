@@ -21,7 +21,7 @@ export function AuthForm({ mode, notice }: { mode: keyof typeof titles; notice?:
       {mode === "password" && <label className="block text-sm">Confirme a senha<input name="confirmPassword" type="password" autoComplete="new-password" required minLength={8} maxLength={128} className="crm-input" /></label>}
       {state.error && <p role="alert" className="text-sm text-red-700">{state.error}</p>}
       {state.message && <p role="status" className="text-sm text-accent-dark">{state.message}</p>}
-      <button disabled={pending} className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{pending ? "Aguarde…" : mode === "login" ? "Entrar" : mode === "recover" ? "Enviar link de recuperação" : mode === "resend" ? "Reenviar confirmação" : "Salvar nova senha"}</button>
+      <button disabled={pending} className="lume-button lume-button--solid w-full disabled:opacity-50">{pending ? "Aguarde…" : mode === "login" ? "Entrar" : mode === "recover" ? "Enviar link de recuperação" : mode === "resend" ? "Reenviar confirmação" : "Salvar nova senha"}</button>
       {mode === "login" && <Link href="/recuperar-senha" className="block text-center text-sm text-accent-dark">Esqueci minha senha</Link>}
       {mode === "login" && state.error && <Link href="/reenviar-confirmacao" className="block text-center text-sm text-accent-dark">Minha conta anterior precisa confirmar o e-mail</Link>}
     </form>

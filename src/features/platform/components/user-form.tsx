@@ -29,8 +29,8 @@ function UserFields({ workspace, scope, operatorRole, mode, canCreate, onModeCha
   return <form action={action} className="space-y-4">
     <fieldset disabled={pending} className="space-y-4">
       <div className="flex flex-wrap gap-2" role="group" aria-label="Como adicionar a pessoa">
-        <button type="button" aria-pressed={creating} onClick={() => onModeChange("create")} className={"rounded-lg border px-4 py-2 text-sm "+(creating ? "border-accent bg-[var(--accent-soft)] font-semibold text-accent-dark" : "border-border")}>Novo usuário</button>
-        <button type="button" aria-pressed={!creating} onClick={() => onModeChange("assign")} className={"rounded-lg border px-4 py-2 text-sm "+(!creating ? "border-accent bg-[var(--accent-soft)] font-semibold text-accent-dark" : "border-border")}>Já possui conta</button>
+        <button type="button" aria-pressed={creating} onClick={() => onModeChange("create")} className={"lume-button "+(creating ? "lume-button--soft font-semibold" : "lume-button--outline")}>Novo usuário</button>
+        <button type="button" aria-pressed={!creating} onClick={() => onModeChange("assign")} className={"lume-button "+(!creating ? "lume-button--soft font-semibold" : "lume-button--outline")}>Já possui conta</button>
       </div>
       <input type="hidden" name="mode" value={mode} />
       {creating && <label className="block text-sm">Nome da pessoa
@@ -54,7 +54,7 @@ function UserFields({ workspace, scope, operatorRole, mode, canCreate, onModeCha
         </label>
         <p className="text-xs text-[var(--ink-soft)]">A pessoa poderá entrar com o e-mail e a senha definidos aqui, sem confirmação por e-mail. Nenhum e-mail será enviado.</p>
       </> : <p className="text-xs text-[var(--ink-soft)]">{scope === "master" ? "A conta precisa ter e-mail confirmado e estar sem empresa ou vinculada à Lume. Será concedido acesso master, mantendo a senha atual." : "A conta precisa ter e-mail confirmado e não pertencer a outra empresa. A senha atual será mantida. Se já houver vínculo, o perfil e as permissões existentes serão preservados."}</p>}
-      <button disabled={creating && !canCreate} className="w-full rounded-lg bg-accent px-4 py-3 text-sm font-semibold text-white disabled:opacity-50" type="submit">
+      <button disabled={creating && !canCreate} className="lume-button lume-button--solid w-full disabled:opacity-50" type="submit">
         {pending ? "Salvando..." : scope === "master" ? (creating ? "Criar master" : "Conceder acesso master") : creating ? "Criar usuário" : "Vincular conta à empresa"}
       </button>
     </fieldset>

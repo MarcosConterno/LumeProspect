@@ -12,6 +12,8 @@ O usuário executa npm, lint, build, dev e TODO SQL no Supabase online. Não exe
 
 Nenhum SQL desta entrega foi aplicado. Nenhum lint, build ou teste foi executado. O usuário precisou sair durante a implementação. Ainda não considerar pronto para produção ou orientar a aplicação sem concluir a revisão abaixo.
 
+Este registro descreve o ponto inicial da implementação. O repositório recebeu depois migrations incrementais para busca, datas explícitas, paginação e métricas do dashboard; a ordem atual e a distinção entre vencimento e baixa estão documentadas em [finance-implementation.md](specs/finance-implementation.md). O estado de aplicação no Supabase continua dependendo da confirmação do usuário.
+
 ### Arquivos criados / alterados
 
 - `supabase/migrations/20260914220000_company_finance.sql`: migration transacional PENDENTE. Tabelas finance_categories, finance_entries, finance_payments e finance_history. Vínculos compostos por workspace com companies e categorias. RLS de leitura e mutações exclusivamente por RPC autenticadas. Categorias iniciais para empresas existentes e trigger para novas empresas. Baixas parciais, proteção contra pagamento acima do saldo, identificador de baixa para evitar duplicação em repetição de requisição, controle de versão e bloqueio de linha, estorno e cancelamento com motivo, preservação do histórico. Publicação Realtime de finance_entries e finance_categories. Novos direitos can_settle e can_reverse em member_permissions, com atualização de module_access e manage_member.

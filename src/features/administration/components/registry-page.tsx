@@ -16,7 +16,7 @@ export async function RegistryPage({ kind, searchParams, settings=false, basePat
   return <div className="max-w-6xl space-y-6">
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div>{settings ? <h2 className="font-display text-2xl">Configurações de {config.title}</h2> : <><p className="text-sm text-accent-dark">Cadastros</p><h1 className="mt-2 font-display text-3xl">{config.title}</h1></>}<p className="mt-2 text-sm text-[var(--ink-soft)]">{config.description}</p></div>
-      {data.canCreate && <Link href={path + "?new=1"} className="rounded-lg bg-accent px-4 py-2 text-sm text-white">Cadastrar {config.singular}</Link>}
+      {data.canCreate && <Link href={path + "?new=1"} className="page-action lume-button lume-button--solid">Cadastrar {config.singular}</Link>}
     </header>
     {params.saved === "1" && <p role="status" className="rounded-lg bg-[var(--accent-soft)] p-3 text-sm">Cadastro salvo.</p>}
     {data.showForm && <section className="space-y-4 rounded-xl border border-border bg-surface p-5">
@@ -31,8 +31,8 @@ export async function RegistryPage({ kind, searchParams, settings=false, basePat
         <option value="all">Todas</option>
         {(kind === "company" ? ["prospect","customer","inactive"] : ["active","inactive"]).map(status => <option key={status} value={status}>{statusLabels[status]}</option>)}
       </select></label>
-      <button className="rounded-lg border border-border px-4 py-2 text-sm">Filtrar</button>
-      <Link href={path} className="py-2 text-sm underline">Limpar</Link>
+      <button className="lume-button lume-button--outline">Filtrar</button>
+      <Link href={path} className="lume-button lume-button--ghost">Limpar</Link>
     </form>
     <p className="text-sm text-[var(--ink-soft)]">{data.count} registro(s) encontrado(s).</p>
     <div className="overflow-x-auto rounded-xl border border-border bg-surface">
@@ -41,7 +41,7 @@ export async function RegistryPage({ kind, searchParams, settings=false, basePat
         <tbody>{data.rows.map(row => <tr key={row.id} className="border-b border-border last:border-0">
           <td className="max-w-lg p-4"><p className="font-medium break-words">{row.name}</p><p className="mt-1 line-clamp-2 text-xs text-[var(--ink-soft)]">{row.detail || "Sem informações adicionais"}</p></td>
           <td className="whitespace-nowrap p-4">{statusLabels[row.status]}</td>
-          <td className="p-4"><Link href={kind === "company" ? `/clientes/${row.id}` : path + "?edit=" + row.id} className="text-accent-dark underline" aria-label={kind === "company" ? "Abrir " + row.name : (data.canUpdate ? "Editar " : "Consultar ") + row.name}>{kind === "company" ? "Abrir cadastro" : data.canUpdate ? "Editar" : "Consultar"}</Link></td>
+          <td className="p-4"><Link href={kind === "company" ? `/clientes/${row.id}` : path + "?edit=" + row.id} className="lume-button lume-button--slide" aria-label={kind === "company" ? "Abrir " + row.name : (data.canUpdate ? "Editar " : "Consultar ") + row.name}>{kind === "company" ? "Abrir cadastro" : data.canUpdate ? "Editar" : "Consultar"}</Link></td>
         </tr>)}</tbody>
       </table>
       {!data.rows.length && <p className="p-6 text-sm text-[var(--ink-soft)]">{data.count ? "Nenhum registro nesta página. Volte para a primeira página." : "Nenhum cadastro encontrado. Cadastre o primeiro ou ajuste os filtros."}</p>}

@@ -45,6 +45,6 @@ export function EntryForm({workspace,categories,today,entry,onSaved,onClose}:{wo
     <label>Valor (R$)<input name="amount" inputMode="numeric" required disabled={locked} value={locked ? money(original!.amountCents) : amount} onChange={event=>setAmount(currencyMask(event.target.value))} placeholder="R$ 0,00"/></label>
     <label className="finance-wide">Observações<textarea name="notes" maxLength={4000} rows={3} defaultValue={original?.notes}/></label>
     {error && <p role="alert" className="finance-wide finance-coral">{error}</p>}
-    <div className="finance-actions finance-wide"><button className="finance-primary" disabled={pending}>{pending ? "Salvando..." : "Salvar lançamento"}</button><button type="button" onClick={onClose}>Fechar</button></div>
+    <div className="finance-actions finance-wide"><button className="finance-primary" disabled={pending}>{pending ? "Salvando..." : "Salvar lançamento"}</button><button type="button" className="lume-button lume-button--ghost" onClick={onClose}>Fechar</button></div>
   </fieldset></form>;
 }

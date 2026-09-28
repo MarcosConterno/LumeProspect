@@ -1,0 +1,101 @@
+/*
+ * Biblioteca de botões Lume.
+ *
+ * As variantes são deliberadamente discretas: a animação reforça a ação,
+ * mas não compete com dados financeiros, tabelas ou formulários.
+ * Consulte docs/button-style-catalog.md antes de aplicar uma variante.
+ */
+.lume-button {
+  --button-bg: var(--foreground);
+  --button-fg: #fff;
+  --button-border: var(--foreground);
+  --button-shadow: 0 5px 14px rgb(22 24 29 / 10%);
+  position: relative;
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid var(--button-border);
+  border-radius: 10px;
+  background: var(--button-bg);
+  padding: 8px 14px;
+  color: var(--button-fg);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 20px;
+  text-decoration: none;
+  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.lume-button:hover { transform: translateY(-1px); box-shadow: var(--button-shadow); }
+.lume-button:active { transform: translateY(0); box-shadow: 0 2px 5px rgb(22 24 29 / 10%); }
+.lume-button:disabled, .lume-button[aria-disabled="true"] { opacity: .52; pointer-events: none; }
+.lume-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* 01 · Sólido Lume — ação principal confiável. */
+.lume-button--solid {
+  --button-bg: var(--accent-dark);
+  --button-border: var(--accent-dark);
+  --button-shadow: 0 6px 16px rgb(23 91 70 / 18%);
+}
+.lume-button--solid:hover { background: var(--accent); }
+
+/* 02 · Suave — secundária com presença, sem competir com a principal. */
+.lume-button--soft {
+  --button-bg: var(--accent-soft);
+  --button-fg: var(--accent-dark);
+  --button-border: #cbe3d5;
+  --button-shadow: 0 4px 12px rgb(23 91 70 / 10%);
+}
+.lume-button--soft:hover { border-color: #9fcbb4; background: #dceddf; }
+
+/* 03 · Contorno — filtros, configurações e ações de apoio. */
+.lume-button--outline {
+  --button-bg: var(--surface);
+  --button-fg: var(--foreground);
+  --button-border: var(--border);
+  --button-shadow: 0 4px 12px rgb(20 55 43 / 8%);
+}
+.lume-button--outline:hover { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-soft); }
+
+/* 04 · Fantasma — fechar, voltar e ações de tabela. */
+.lume-button--ghost {
+  --button-bg: transparent;
+  --button-fg: var(--ink-soft);
+  --button-border: transparent;
+  --button-shadow: none;
+}
+.lume-button--ghost:hover { color: var(--accent-dark); background: var(--accent-soft); box-shadow: none; }
+
+/* 05 · Deslizante — links de detalhe que ganham uma seta no hover. */
+.lume-button--slide { --button-bg: var(--surface); --button-fg: var(--accent-dark); --button-border: #cbe3d5; }
+.lume-button--slide::after { content: "→"; max-width: 0; overflow: hidden; opacity: 0; transition: max-width .2s ease, opacity .2s ease, transform .2s ease; transform: translateX(-4px); }
+.lume-button--slide:hover::after { max-width: 18px; opacity: 1; transform: translateX(0); }
+
+/* 06 · Brilho — destaque pontual para uma ação de conversão. */
+.lume-button--shine { --button-bg: var(--accent-dark); --button-border: var(--accent-dark); }
+.lume-button--shine::before { position: absolute; inset: 0 auto 0 -45%; width: 30%; background: linear-gradient(100deg, transparent, rgb(255 255 255 / 48%), transparent); content: ""; transform: skewX(-18deg); transition: left .5s ease; }
+.lume-button--shine:hover::before { left: 120%; }
+
+/* 07 · Elevação — principal em páginas administrativas. */
+.lume-button--lift { --button-bg: var(--foreground); --button-border: var(--foreground); --button-shadow: 0 8px 0 color-mix(in srgb, var(--accent-dark) 82%, #000); }
+.lume-button--lift:hover { box-shadow: 0 5px 0 color-mix(in srgb, var(--accent-dark) 82%, #000); }
+.lume-button--lift:active { box-shadow: 0 1px 0 color-mix(in srgb, var(--accent-dark) 82%, #000); }
+
+/* 08 · Sucesso — baixa/confirmar, sempre com uso semântico. */
+.lume-button--success { --button-bg: var(--accent-dark); --button-border: var(--accent-dark); --button-shadow: 0 6px 16px rgb(23 91 70 / 18%); }
+.lume-button--success:hover { background: var(--accent); }
+
+/* 09 · Perigo — cancelamento e estorno, com confirmação visível. */
+.lume-button--danger { --button-bg: var(--coral-soft); --button-fg: var(--coral); --button-border: color-mix(in srgb, var(--coral) 28%, var(--border)); --button-shadow: 0 4px 12px rgb(184 80 62 / 10%); }
+.lume-button--danger:hover { border-color: var(--coral); background: #f8ddd7; }
+
+/* 10 · Ícone — ações compactas, sempre com aria-label. */
+.lume-button--icon { width: 38px; padding: 8px; border-radius: 10px; }
+.lume-button--icon svg { width: 17px; height: 17px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lume-button, .lume-button::before, .lume-button::after { transition: none; }
+}

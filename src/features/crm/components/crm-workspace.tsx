@@ -81,7 +81,7 @@ export function CrmWorkspace() {
           <h1 className="font-display text-3xl">Pipeline Comercial</h1>
           <p className="mt-1 text-[14.5px] text-[var(--ink-soft)]">Acompanhe seus negócios e mantenha o foco no que realmente importa.</p>
         </div>
-        <button type="button" className="crm-period"><span aria-hidden="true">▣</span> Setembro 2026</button>
+        <button type="button" className="page-action crm-period"><span aria-hidden="true">▣</span> Setembro 2026</button>
       </header>
       <CrmTabs active={view} onChange={setView} />
       <div className="mt-6"><CrmStats deals={deals} attentionCount={attentionCount} /></div>

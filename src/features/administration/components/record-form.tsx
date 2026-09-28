@@ -6,7 +6,7 @@ import { saveMaster, searchCompanies } from "../actions";
 import { fields, type CompanyOption, type SaveTarget, type Values } from "../types";
 
 const inputClass = "mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm disabled:opacity-70";
-const buttonClass = "rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50";
+const buttonClass = "lume-button lume-button--outline disabled:opacity-50";
 
 function CompanyField({ workspace, initial, locked = false }: { workspace: string; initial: CompanyOption | null; locked?: boolean }) {
   const [query, setQuery] = useState("");
@@ -62,8 +62,8 @@ export function RecordForm({ target, initial = {}, selectedCompany = null, readO
     </fieldset>
     {state.error && <div role="alert" className="space-y-2 text-sm text-red-700"><p>{state.error}</p><a className="underline" href={target.id ? cancelHref + (cancelHref.includes("?") ? "&" : "?") + "edit=" + target.id : cancelHref}>Recarregar dados (descarta alterações não salvas)</a></div>}
     {!readOnly && <div className="flex flex-wrap items-center gap-4">
-      <button disabled={pending} className="rounded-lg bg-accent px-5 py-2 text-sm text-white disabled:opacity-50">{pending ? "Salvando…" : "Salvar cadastro"}</button>
-      <Link href={cancelHref} className="text-sm underline">Voltar</Link>
+      <button disabled={pending} className="lume-button lume-button--solid disabled:opacity-50">{pending ? "Salvando…" : "Salvar cadastro"}</button>
+      <Link href={cancelHref} className="lume-button lume-button--ghost">Voltar</Link>
     </div>}
     {["company","contact","service"].includes(target.kind) && <p className="text-xs text-[var(--ink-soft)]">Para deixar de usar um cadastro, altere sua situação para inativo. Os vínculos e o histórico permanecem.</p>}
   </form>;

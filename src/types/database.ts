@@ -1049,7 +1049,10 @@ export type Database = {
       // Pending migration: 20260915160000_master_user_assignment.sql
       platform_assign_user: { Args: { target:string; address:string; member_role:string; check_only?:boolean }; Returns: Json }
       // Pending migration: 20260915120000_finance_search_reports.sql
-      finance_search_entries: { Args: { target: string; filters: Json; export_all?: boolean }; Returns: Json }
+       finance_search_entries: { Args: { target: string; filters: Json; export_all?: boolean }; Returns: Json }
+        finance_cash_movements: { Args: { target: string; filters: Json }; Returns: Json }
+        finance_reversed_movements: { Args: { target: string; filters: Json }; Returns: Json }
+        finance_bootstrap: { Args: { target: string; filters: Json }; Returns: Json }
       // Pending migration: 20260914220000_company_finance.sql
       finance_dashboard: { Args: { target: string; selected_month: string }; Returns: Json }
       finance_snapshot: { Args: { target: string; filters: Json }; Returns: Json }

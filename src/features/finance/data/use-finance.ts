@@ -12,7 +12,14 @@ export function useFinance(initial: FinanceSnapshot) {
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
+  const lastAutomaticRefresh = useRef(0);
   const refresh = useCallback(() => setRevision(n => n + 1), []);
+  const refreshAutomatically = useCallback(() => {
+    const now = Date.now();
+    if (now - lastAutomaticRefresh.current < 5000) return;
+    lastAutomaticRefresh.current = now;
+    setRevision(n => n + 1);
+  }, []);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -39,17 +46,17 @@ export function useFinance(initial: FinanceSnapshot) {
   // The subscription belongs to the workspace, independently of list filters.
   useEffect(() => {
     let disposed = false;
-    const onVisible = () => {if(document.visibilityState === "visible") refresh();};
+    const onVisible = () => {if(document.visibilityState === "visible") refreshAutomatically();};
     const db = createClient();
     const channel = db.channel("finance:" + initial.workspace)
-      .on("postgres_changes", {event:"*",schema:"public",table:"finance_entries",filter:"workspace_id=eq." + initial.workspace}, refresh)
-      .on("postgres_changes", {event:"*",schema:"public",table:"finance_categories",filter:"workspace_id=eq." + initial.workspace}, refresh)
+      .on("postgres_changes", {event:"*",schema:"public",table:"finance_entries",filter:"workspace_id=eq." + initial.workspace}, refreshAutomatically)
+      .on("postgres_changes", {event:"*",schema:"public",table:"finance_categories",filter:"workspace_id=eq." + initial.workspace}, refreshAutomatically)
       .subscribe(status => {if(!disposed) setLive(status === "SUBSCRIBED");});
     const interval = setInterval(onVisible, 60000);
     window.addEventListener("focus", onVisible);
     document.addEventListener("visibilitychange", onVisible);
     return () => {disposed=true; clearInterval(interval); window.removeEventListener("focus",onVisible); document.removeEventListener("visibilitychange",onVisible); void db.removeChannel(channel);};
-  }, [initial.workspace, refresh]);
+  }, [initial.workspace, refreshAutomatically]);
 
   return {snapshot,filters,setFilters,error,live,loading:loading || filters!==settledFilters,refresh};
 }

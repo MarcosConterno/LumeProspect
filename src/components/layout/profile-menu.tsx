@@ -5,7 +5,7 @@ import Link from "next/link";
 import { signOut } from "@/features/auth/actions";
 import { NavIcon } from "./nav-icon";
 
-export function ProfileMenu({ name, email }: { name: string; email: string }) {
+export function ProfileMenu({ name, email, context }: { name: string; email: string; context?: string }) {
   const details = useRef<HTMLDetailsElement>(null);
   const summary = useRef<HTMLElement>(null);
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -33,7 +33,7 @@ export function ProfileMenu({ name, email }: { name: string; email: string }) {
 
   return <details ref={details} className="profile-menu">
     <summary ref={summary} aria-label={"Meu perfil: " + name}>
-      <span className="profile-trigger-name">{name}</span>
+      <span className="profile-trigger-copy"><span className="profile-trigger-name">{name}</span>{context && <span className="profile-trigger-context">{context}</span>}</span>
       <span className="profile-avatar" aria-hidden="true">{initials}</span>
       <span className="profile-chevron" aria-hidden="true">⌄</span>
     </summary>

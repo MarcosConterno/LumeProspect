@@ -23,10 +23,10 @@ export function FinanceResults({snapshot,filters,loading,onPageChange,onSaved}:{
     </div>
     <p className="finance-form-note">Valores agrupados pelos lançamentos encontrados e suas baixas.</p>
     <div className="finance-table-scroll"><table className="finance-table">
-      <caption className="sr-only">Lançamentos encontrados. Selecione a descrição para abrir os detalhes.</caption>
+      <caption className="sr-only">Lançamentos encontrados. Clique na linha ou na descrição para abrir os detalhes.</caption>
       <thead><tr><th scope="col">Descrição</th><th scope="col">Vencimento</th><th scope="col">Situação</th><th scope="col">Valor</th></tr></thead>
-      <tbody>{snapshot.entries.map(entry=><tr key={entry.id}>
-        <td><button type="button" className="finance-entry-link" aria-expanded={selected===entry.id} onClick={()=>setSelected(current=>current===entry.id ? null : entry.id)}>{entry.description}</button><small>{entry.companyName} · {entry.categoryName}</small><small>Lançado em {dateLabel(entry.launchDate || entry.dueDate)}</small></td>
+      <tbody>{snapshot.entries.map(entry=><tr key={entry.id} onClick={()=>setSelected(entry.id)}>
+        <td><button type="button" className="finance-entry-link" aria-expanded={selected===entry.id} onClick={()=>setSelected(entry.id)}>{entry.description}</button><small>{entry.companyName} · {entry.categoryName}</small><small>Lançado em {dateLabel(entry.launchDate || entry.dueDate)}</small></td>
         <td><strong className="finance-due-date">{dateLabel(entry.dueDate)}</strong><small>{entry.type === "receivable" ? "Recebimento" : "Pagamento"}</small><small>{entry.settlementDate ? `${entry.type === "receivable" ? "Recebido" : "Pago"}: ${dateLabel(entry.settlementDate)}` : entry.type === "receivable" ? "Sem recebimento" : "Sem pagamento"}</small></td><td><span className={"finance-status "+(entry.cancelledAt ? "is-cancelled" : entry.paidCents===entry.amountCents ? "is-settled" : entry.dueDate<snapshot.today ? "is-overdue" : "is-open")}>{entryStatus(entry,snapshot.today)}</span></td>
         <td className={entry.type==="receivable" ? "finance-green" : "finance-coral"}><strong>{entry.type==="receivable" ? "+ " : "− "}{money(entry.amountCents)}</strong>{entry.paidCents>0 && <small>Baixado: {money(entry.paidCents)}</small>}</td>
       </tr>)}</tbody>

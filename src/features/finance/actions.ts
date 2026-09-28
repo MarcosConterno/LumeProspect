@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
-import { financeContext, financeError, loadFinance, loadFinanceDetail, searchFinanceCompanies } from "./data/repository";
+import { financeContext, financeError, loadFinance, searchFinanceCompanies } from "./data/repository";
 import { cents, date, text, uuid, validateEntry, version } from "./data/validation";
 import type { EntryInput, FinanceCategory, FinanceFilters, FinanceResult } from "./types";
 
@@ -10,7 +10,6 @@ async function perform<T>(work:()=>Promise<T>):Promise<FinanceResult<T>> {
   catch(error) {unstable_rethrow(error);return {error:error instanceof Error?error.message:"Não foi possível concluir a operação."};}
 }
 export async function refreshFinance(workspace:string,filters:FinanceFilters) {return perform(()=>loadFinance(workspace,filters));}
-export async function readFinanceEntry(workspace:string,id:string) {return perform(()=>loadFinanceDetail(workspace,id));}
 export async function findFinanceCompanies(workspace:string,query:string) {return perform(()=>searchFinanceCompanies(workspace,query));}
 export async function saveFinanceEntry(workspace:string,input:EntryInput) {
   return perform(async()=>{

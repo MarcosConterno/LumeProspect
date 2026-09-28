@@ -5,7 +5,7 @@ import { money, monthNames, percentChange, percentLabel } from "../format";
 import type { FinanceSnapshot } from "../types";
 
 const chartColors = ["#176b57", "#d95540", "#8eaaa0", "#b8862e", "#737880"];
-type ChartTooltipProps = TooltipContentProps<number, string>;
+type ChartTooltipProps = TooltipContentProps;
 
 function DueIcon({ type }: { type: FinanceSnapshot["entries"][number]["type"] }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h5"/>{type === "receivable" ? <path d="m8 16 2 2 5-5"/> : <path d="M8 16h7M12 13l3 3-3 3"/>}</svg>;
@@ -27,7 +27,10 @@ function compactMoney(value: number) {
 function FlowTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null;
   const items = payload.filter((item, index, all) => all.findIndex(candidate => candidate.dataKey === item.dataKey) === index);
-  return <div className="finance-recharts-tooltip"><strong>{label}</strong>{items.map((item, index) => <div key={`${String(item.dataKey)}-${index}`}><i style={{ background: item.color }} /><span>{item.name}</span><b>{money(Number(item.value ?? 0))}</b></div>)}</div>;
+  return <div className="finance-recharts-tooltip"><strong>{label}</strong>{items.map((item, index) => {
+    const isPayable = item.dataKey === "payable";
+    return <div key={`${String(item.dataKey)}-${index}`}><i className={isPayable ? "is-payable" : "is-receivable"} /><span>{item.name}</span><b>{money(Number(item.value ?? 0))}</b></div>;
+  })}</div>;
 }
 
 function FlowChart({ snapshot }: { snapshot: FinanceSnapshot }) {
@@ -47,7 +50,7 @@ function FlowChart({ snapshot }: { snapshot: FinanceSnapshot }) {
           <CartesianGrid vertical={false} stroke="#e7eeea" strokeDasharray="3 5"/>
           <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: "#84918f", fontSize: 10 }} interval="preserveStartEnd"/>
           <YAxis axisLine={false} tickLine={false} tick={{ fill: "#84918f", fontSize: 10 }} tickFormatter={compactMoney} width={58}/>
-          <Tooltip content={<FlowTooltip/>} cursor={{ stroke: "#9aa9a3", strokeDasharray: "4 4" }}/>
+          <Tooltip content={FlowTooltip} cursor={{ stroke: "#9aa9a3", strokeDasharray: "4 4" }}/>
           <Area type="monotone" dataKey="receivable" name="Receitas" stroke="none" fill="url(#finance-receivable-fill)" isAnimationActive={false}/>
           <Area type="monotone" dataKey="payable" name="Despesas" stroke="none" fill="url(#finance-payable-fill)" isAnimationActive={false}/>
           <Line type="monotone" dataKey="payable" name="Despesas" stroke="#d95540" strokeWidth={2.5} dot={{ r: 3, fill: "#d95540", strokeWidth: 0 }} activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }} isAnimationActive={false}/>

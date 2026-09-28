@@ -19,6 +19,14 @@ export type FinanceSearch = {
   dateFrom: string; dateTo: string; categoryName: string | null;
   totals: { receivable: number; payable: number; received: number; paid: number };
 };
+export type FinanceMovement = {
+  id: string; entryId: string; type: FinanceKind; companyId: string; companyName: string;
+  categoryId: string; categoryName: string; description: string; dueDate: string; paidOn: string;
+  amountCents: number; notes: string; actor: string; entry: FinanceEntry;
+};
+export type FinanceMovements = { month: string; kind: FinanceKind; movements: FinanceMovement[]; count: number; page: number; totalCents: number };
+export type FinanceReversedMovement = FinanceMovement & { reversedOn: string; reverseReason: string; reverseActor: string };
+export type FinanceReversedMovements = { month: string; movements: FinanceReversedMovement[]; count: number; page: number; totalCents: number };
 export type FinanceSnapshot = {
   workspace: string; today: string; month: string; page: number; count: number;
   entries: FinanceEntry[]; categories: FinanceCategory[]; permissions: FinancePermissions;
