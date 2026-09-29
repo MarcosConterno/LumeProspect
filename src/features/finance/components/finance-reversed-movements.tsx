@@ -22,11 +22,12 @@ export function FinanceReversedMovements({snapshot,onSaved}:{snapshot:FinanceSna
 
   useEffect(()=>{
     let disposed=false;
-    loadFinanceReversedMovementsClient(snapshot.workspace,{month:snapshot.month,query,page}).then(result=>{
+    const controller=new AbortController();
+    loadFinanceReversedMovementsClient(snapshot.workspace,{month:snapshot.month,query,page},controller.signal).then(result=>{
       if(disposed) return;
       if(result.error!==undefined) {setData(null);setError(result.error);} else setData(result.data);
-    }).catch(()=>{if(!disposed){setData(null);setError("Não foi possível carregar os estornos.");}}).finally(()=>{if(!disposed) setLoadedRequest(requestKey);});
-    return ()=>{disposed=true;};
+    }).catch(()=>{if(!disposed && !controller.signal.aborted){setData(null);setError("Não foi possível carregar os estornos.");}}).finally(()=>{if(!disposed) setLoadedRequest(requestKey);});
+    return ()=>{disposed=true;controller.abort();};
   },[snapshot.workspace,snapshot.month,query,page,revision,requestKey]);
 
   function submit(event:FormEvent<HTMLFormElement>) {

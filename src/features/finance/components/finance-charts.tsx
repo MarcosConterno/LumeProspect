@@ -112,5 +112,5 @@ function UpcomingPayments({ snapshot, onOpenEntries, onOpenEntry }: { snapshot: 
 }
 
 export function FinanceCharts({ snapshot, onOpenEntries, onOpenEntry }: { snapshot: FinanceSnapshot; onOpenEntries: () => void; onOpenEntry: (id: string) => void }) {
-  return <div className="finance-overview-grid"><div className="finance-overview-main"><FlowChart snapshot={snapshot}/><UpcomingPayments snapshot={snapshot} onOpenEntries={onOpenEntries} onOpenEntry={onOpenEntry}/></div><aside className="finance-overview-side"><MonthlySummary snapshot={snapshot}/><ExpensesByCategory snapshot={snapshot}/></aside></div>;
+  return <div className="finance-overview-grid"><div className="finance-overview-main"><UpcomingPayments snapshot={snapshot} onOpenEntries={onOpenEntries} onOpenEntry={onOpenEntry}/><FlowChart snapshot={snapshot}/></div><aside className="finance-overview-side"><MonthlySummary snapshot={snapshot}/><ExpensesByCategory snapshot={snapshot}/></aside></div>;
 }

@@ -37,8 +37,9 @@ export function EntryDetail({id,snapshot,onSaved,onClose,initialEntry:providedEn
   },[]);
   useEffect(()=>{
     let disposed=false;
-    loadFinanceDetailClient(snapshot.workspace,id).then(result=>{if(disposed) return;setLoadedRequest(requestKey);if(result.error !== undefined) {if(!hasInitialEntry) setDetail(null);setError(result.error);} else {setDetail(result.data);setError("");}}).catch(()=>{if(!disposed) {setLoadedRequest(requestKey);if(!hasInitialEntry) setDetail(null);setError("Não foi possível carregar o lançamento.");}});
-    return ()=>{disposed=true;};
+    const controller=new AbortController();
+    loadFinanceDetailClient(snapshot.workspace,id,controller.signal).then(result=>{if(disposed) return;setLoadedRequest(requestKey);if(result.error !== undefined) {if(!hasInitialEntry) setDetail(null);setError(result.error);} else {setDetail(result.data);setError("");}}).catch(()=>{if(!disposed && !controller.signal.aborted) {setLoadedRequest(requestKey);if(!hasInitialEntry) setDetail(null);setError("Não foi possível carregar o lançamento.");}});
+    return ()=>{disposed=true;controller.abort();};
   },[snapshot.workspace,id,requestKey,hasInitialEntry]);
   function saved() {setEditing(false);setRevision(n=>n+1);onSaved();}
   const entry=detail?.entry;

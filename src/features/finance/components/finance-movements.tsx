@@ -24,11 +24,12 @@ export function FinanceMovements({snapshot,kind,onSaved,onNew}:{snapshot:Finance
 
   useEffect(()=>{
     let disposed=false;
-    loadFinanceMovementsClient(snapshot.workspace,{month:snapshot.month,kind,query,page}).then(result=>{
+    const controller=new AbortController();
+    loadFinanceMovementsClient(snapshot.workspace,{month:snapshot.month,kind,query,page},controller.signal).then(result=>{
       if(disposed) return;
       if(result.error!==undefined) {setData(null);setError(result.error);} else setData(result.data);
-    }).catch(()=>{if(!disposed){setData(null);setError("Não foi possível carregar as movimentações.");}}).finally(()=>{if(!disposed) setLoadedRequest(requestKey);});
-    return ()=>{disposed=true;};
+    }).catch(()=>{if(!disposed && !controller.signal.aborted){setData(null);setError("Não foi possível carregar as movimentações.");}}).finally(()=>{if(!disposed) setLoadedRequest(requestKey);});
+    return ()=>{disposed=true;controller.abort();};
   },[snapshot.workspace,snapshot.month,kind,query,page,revision,requestKey]);
 
   function submit(event:FormEvent<HTMLFormElement>) {

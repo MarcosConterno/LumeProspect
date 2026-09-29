@@ -119,6 +119,10 @@
 .finance-upcoming-list { display: grid; margin-top: 12px; }
 .finance-upcoming-item { display: grid; grid-template-columns: 58px 28px minmax(0,1fr) auto; align-items: center; gap: 8px; width: 100%; padding: 8px 0; border: 0; border-top: 1px solid var(--border-soft); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .finance-upcoming-item:hover { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+.finance-workspace .finance-upcoming-item:hover:not(:disabled):not([aria-disabled="true"]) { border-color: #b8d9c9; background: color-mix(in srgb, var(--accent-soft) 72%, var(--surface)); color: inherit; box-shadow: 0 4px 12px rgb(20 55 43 / 8%); transform: translateY(-1px); }
+.finance-workspace .finance-upcoming-item:hover:not(:disabled):not([aria-disabled="true"]) .finance-upcoming-description strong { color: var(--foreground); }
+.finance-workspace .finance-upcoming-item:hover:not(:disabled):not([aria-disabled="true"]) .finance-upcoming-date { color: var(--ink-soft); }
+.finance-workspace .finance-upcoming-item:hover:not(:disabled):not([aria-disabled="true"]) .finance-upcoming-date.is-today { color: var(--accent-dark); }
 .finance-upcoming-item:focus-visible { border-radius: 6px; }
 .finance-upcoming-date { color: var(--ink-soft); font-size: 10px; font-weight: 600; text-transform: uppercase; }
 .finance-upcoming-date.is-today { color: var(--accent-dark); }
@@ -414,7 +418,7 @@
 @container finance (min-width: 960px) {
   .finance-metrics { grid-template-columns: repeat(4,minmax(0,1fr)); }
   .finance-overview-grid { grid-template-columns: minmax(0,1.75fr) minmax(250px,.8fr); }
-  .finance-upcoming-list { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0; }
+  .finance-upcoming-list { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0; }
   .finance-upcoming-item { grid-template-columns: 50px 26px minmax(0,1fr) auto; grid-template-areas: "date icon description amount"; gap: 9px; padding: 8px 10px; border-top: 0; border-left: 1px solid var(--border-soft); }
   .finance-upcoming-item:first-child { padding-left: 0; border-left: 0; }
   .finance-upcoming-date { grid-area: date; }

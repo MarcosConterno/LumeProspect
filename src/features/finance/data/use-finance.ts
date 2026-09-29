@@ -5,32 +5,31 @@ import { refreshFinance } from "../actions";
 import type { FinanceFilters, FinanceSnapshot } from "../types";
 
 export function useFinance(initial: FinanceSnapshot) {
-  const [filters, setFilters] = useState<FinanceFilters>({month:initial.month,type:"all",status:"all",query:"",page:1});
-  const [settledFilters, setSettledFilters] = useState(filters);
+  const initialFilters: FinanceFilters = {month:initial.month,type:"all",status:"all",query:"",page:1};
+  const [filters, setFilters] = useState<FinanceFilters>(initialFilters);
+  const [settledFilters, setSettledFilters] = useState<FinanceFilters>(initialFilters);
   const [snapshot, setSnapshot] = useState(initial);
   const [error, setError] = useState("");
   const [live, setLive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [revision, setRevision] = useState(0);
   const lastAutomaticRefresh = useRef(0);
-  const refresh = useCallback(() => setRevision(n => n + 1), []);
+  const refresh = useCallback(() => {setLoading(true);setRevision(n => n + 1);}, []);
   const refreshAutomatically = useCallback(() => {
     const now = Date.now();
     if (now - lastAutomaticRefresh.current < 5000) return;
     lastAutomaticRefresh.current = now;
-    setRevision(n => n + 1);
+    setLoading(true);setRevision(n => n + 1);
   }, []);
-  const hydrated = useRef(false);
+  const mounted = useRef(false);
 
   useEffect(() => {
     let disposed = false;
-    if (!hydrated.current) {
-      hydrated.current = true;
-      setSettledFilters(filters);
+    if (!mounted.current) {
+      mounted.current = true;
       return () => { disposed = true; };
     }
     const fetchSnapshot = async () => {
-      setLoading(true);
       try {
         const result = await refreshFinance(initial.workspace, filters);
         if(disposed) return;
