@@ -43,6 +43,10 @@ create temp table pg_temp.finance_perf_samples (
   payload_bytes integer not null
 ) on commit drop;
 
+-- A fixture é criada antes da troca para authenticated. Permita que o
+-- papel autenticado grave e leia somente as amostras temporárias.
+grant insert,select on table pg_temp.finance_perf_samples to authenticated;
+
 create function pg_temp.measure_finance(label text, target uuid, operation text)
 returns void
 language plpgsql
@@ -229,6 +233,7 @@ begin
         'companyId',company_id,
         'categoryId',category_id,
         'description',format('Performance lançamento %s',lpad(index::text,3,'0')),
+        'launchDate',due_date::text,
         'dueDate',due_date::text,
         'amountCents',amount,
         'notes','Fixture temporária de performance'
@@ -306,7 +311,42 @@ from pg_temp.finance_perf_samples
 group by label
 order by label;
 
-select
-  'PASS: performance measured with 2 clients, 120 entries, 12 payments and 6 reversals. The final ROLLBACK restores the database to its previous state.' as result;
+-- Resultado consolidado: o SQL Editor normalmente exibe apenas o último
+-- conjunto de resultados de um script com várias instruções.
+select jsonb_build_object(
+  'result','PASS',
+  'message','Performance measured with 2 clients, 120 entries, 12 payments and 6 reversals. The final ROLLBACK restores the database to its previous state.',
+  'fixture',jsonb_build_object(
+    'marker',current_setting('test.perf.marker'),
+    'workspace',current_setting('test.perf.workspace'),
+    'clients',(select count(*) from public.companies where workspace_id=current_setting('test.perf.workspace')::uuid),
+    'entries',(select count(*) from public.finance_entries where workspace_id=current_setting('test.perf.workspace')::uuid),
+    'payments',(select count(*) from public.finance_payments where workspace_id=current_setting('test.perf.workspace')::uuid),
+    'reversedPayments',(select count(*) from public.finance_payments where workspace_id=current_setting('test.perf.workspace')::uuid and reversed_at is not null)
+  ),
+  'measurements',coalesce((
+    select jsonb_agg(jsonb_build_object(
+      'label',x.label,
+      'measuredRuns',x.measured_runs,
+      'minMs',x.min_ms,
+      'avgMs',x.avg_ms,
+      'maxMs',x.max_ms,
+      'minPayloadBytes',x.min_payload_bytes,
+      'maxPayloadBytes',x.max_payload_bytes
+    ) order by x.label)
+    from (
+      select
+        label,
+        count(*) as measured_runs,
+        round(min(elapsed_ms),2) as min_ms,
+        round(avg(elapsed_ms),2) as avg_ms,
+        round(max(elapsed_ms),2) as max_ms,
+        min(payload_bytes) as min_payload_bytes,
+        max(payload_bytes) as max_payload_bytes
+      from pg_temp.finance_perf_samples
+      group by label
+    ) x
+  ),'[]'::jsonb)
+) as performance_report;
 
 rollback;

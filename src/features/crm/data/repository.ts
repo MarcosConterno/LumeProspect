@@ -2,7 +2,7 @@ import "server-only";
 import { requireWorkspace } from "@/features/auth/context";
 import { requireModule } from "@/features/auth/module-access";
 import type { Database } from "@/types/database";
-import type { CrmSnapshot, CrmOptions, Deal, DealActivity, DealDetail } from "../types";
+import type { CrmCompany, CrmContact, CrmSnapshot, CrmOptions, Deal, DealActivity, DealDetail } from "../types";
 import { uuid } from "./validation";
 
 type DealRow = Pick<Database["public"]["Tables"]["deals"]["Row"],
@@ -12,6 +12,12 @@ type DealRow = Pick<Database["public"]["Tables"]["deals"]["Row"],
 type ActivityRow = Pick<Database["public"]["Tables"]["deal_activities"]["Row"],
   "id" | "deal_id" | "type" | "title" | "description" | "scheduled_at" | "completed_at" |
   "status" | "version" | "created_at">;
+type DealRelationRow = DealRow & {
+  companies: Pick<CrmCompany, "name" | "location" | "employee_range"> | null;
+  contacts: Pick<CrmContact, "name" | "role" | "email" | "phone"> | null;
+  services: { id: string; name: string; active: boolean } | null;
+  workspace_members: { user_id: string; profiles: { full_name: string | null } | null } | null;
+};
 type Db = Awaited<ReturnType<typeof requireWorkspace>>["db"];
 
 export async function crmContext(expectedWorkspace?: string) {
@@ -48,6 +54,23 @@ async function optionsFor(db: Db, workspace: string): Promise<CrmOptions> {
   ]);
   return { companies: companies.sort((a, b) => a.name.localeCompare(b.name)), contacts: contacts.sort((a, b) => a.name.localeCompare(b.name)), services: services.sort((a, b) => a.name.localeCompare(b.name)), owners: members.map((member) => ({ id: member.user_id, name: member.profiles?.full_name || "Membro da equipe" })) };
 }
+export async function loadCrmOptions(expectedWorkspace?: string): Promise<CrmOptions> {
+  const { db, active } = await crmContext(expectedWorkspace);
+  return optionsFor(db, active.workspace_id);
+}
+function optionsFromDeals(rows: DealRelationRow[]): CrmOptions {
+  const companies = new Map<string, CrmCompany>();
+  const contacts = new Map<string, CrmContact>();
+  const services = new Map<string, { id: string; name: string; active: boolean }>();
+  const owners = new Map<string, { id: string; name: string }>();
+  for (const row of rows) {
+    if (row.company_id && row.companies) companies.set(row.company_id, { id: row.company_id, name: row.companies.name, location: row.companies.location, employee_range: row.companies.employee_range });
+    if (row.contact_id && row.contacts && row.company_id) contacts.set(row.contact_id, { id: row.contact_id, company_id: row.company_id, name: row.contacts.name, role: row.contacts.role, email: row.contacts.email, phone: row.contacts.phone });
+    if (row.service_id && row.services) services.set(row.service_id, row.services);
+    if (row.owner_id && row.workspace_members) owners.set(row.owner_id, { id: row.owner_id, name: row.workspace_members.profiles?.full_name || "Membro da equipe" });
+  }
+  return { companies: [...companies.values()].sort((a, b) => a.name.localeCompare(b.name)), contacts: [...contacts.values()].sort((a, b) => a.name.localeCompare(b.name)), services: [...services.values()].sort((a, b) => a.name.localeCompare(b.name)), owners: [...owners.values()].sort((a, b) => a.name.localeCompare(b.name)) };
+}
 function indexOptions(options: CrmOptions) {
   return {
     companies: new Map(options.companies.map((item) => [item.id, item] as const)),
@@ -69,17 +92,18 @@ function mapDeal(row: DealRow, options: ReturnType<typeof indexOptions>, next?: 
 export async function loadCrm(expectedWorkspace?: string): Promise<CrmSnapshot> {
   const { db, active, user } = await crmContext(expectedWorkspace);
   const workspace = active.workspace_id;
-  const dealSelection = "id,workspace_id,name,version,company_id,prospect_id,contact_id,service_id,owner_id,value,stage,status,expected_close_date,score,stage_entered_at,created_at,updated_at,summary,lost_reason";
+  const dealSelection = "id,workspace_id,name,version,company_id,prospect_id,contact_id,service_id,owner_id,value,stage,status,expected_close_date,score,stage_entered_at,created_at,updated_at,summary,lost_reason,companies!deals_company_tenant_fk(name,location,employee_range),contacts!deals_contact_tenant_fk(name,role,email,phone),services!deals_service_tenant_fk(id,name,active),workspace_members!deals_owner_tenant_fk(user_id,profiles(full_name))";
   const activitySelection = "id,deal_id,type,title,description,scheduled_at,completed_at,status,version,created_at";
-  const [options, rows, pending] = await Promise.all([
-    optionsFor(db, workspace),
-    allRows((from, to) => db.from("deals").select(dealSelection).eq("workspace_id", workspace).order("id").range(from, to)),
+  const [rows, pending] = await Promise.all([
+    allRows((from, to) => db.from("deals").select(dealSelection).eq("workspace_id", workspace).eq("status", "open").order("position").order("id").range(from, to)),
     allRows((from, to) => db.from("deal_activities").select(activitySelection).eq("workspace_id", workspace).eq("status", "pending").order("scheduled_at", { nullsFirst: false }).order("id").range(from, to)),
   ]);
+  const relationRows = rows as unknown as DealRelationRow[];
+  const options = optionsFromDeals(relationRows);
   const nextByDeal = new Map<string, ActivityRow>();
   for (const activity of pending) if (!nextByDeal.has(activity.deal_id)) nextByDeal.set(activity.deal_id, activity);
   const indexedOptions = indexOptions(options);
-  return { deals: rows.map((row) => mapDeal(row, indexedOptions, nextByDeal.get(row.id))), options, workspaceId: workspace, userId: user.id, role: active.role };
+  return { deals: relationRows.map((row) => mapDeal(row, indexedOptions, nextByDeal.get(row.id))), options, optionsComplete: false, workspaceId: workspace, userId: user.id, role: active.role };
 }
 export async function loadDeal(workspace: string, id: string): Promise<DealDetail> {
   const { db } = await crmContext(workspace);

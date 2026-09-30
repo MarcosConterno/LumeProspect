@@ -56,7 +56,7 @@ export type CrmOptions = {
   services: { id: string; name: string; active: boolean }[];
   owners: { id: string; name: string }[];
 };
-export type CrmSnapshot = { deals: Deal[]; options: CrmOptions; workspaceId: string; userId: string; role: string };
+export type CrmSnapshot = { deals: Deal[]; options: CrmOptions; optionsComplete?: boolean; workspaceId: string; userId: string; role: string };
 export type CrmNote = { id: string; body: string; created_by: string | null; created_at: string; updated_at: string; version: number };
 export type CrmFile = { id: string; note_id: string | null; original_name: string; content_type: string; size_bytes: number; status: string; created_by: string | null; created_at: string; version: number };
 export type DealDetail = { deal: Deal; activities: DealActivity[]; notes: CrmNote[]; files: CrmFile[] };

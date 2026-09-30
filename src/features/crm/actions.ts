@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { unstable_rethrow } from "next/navigation";
-import { check, crmContext, loadCrm, loadDeal } from "./data/repository";
+import { check, crmContext, loadCrm, loadCrmOptions, loadDeal } from "./data/repository";
 import { text, uuid, validateActivity, validateDeal, validateFile, version } from "./data/validation";
 import type { CrmResult, DealInput, ActivityStatus } from "./types";
 
@@ -19,6 +19,7 @@ function changed(data: unknown[] | null, error: { code?: string; message: string
   if (!data?.length) throw new Error("Este registro foi alterado por outra pessoa ou não está mais disponível. Recarregue os dados antes de salvar.");
 }
 export async function refreshCrm(workspace: string) { return perform(() => loadCrm(workspace)); }
+export async function refreshCrmOptions(workspace: string) { return perform(() => loadCrmOptions(workspace)); }
 export async function readDeal(workspace: string, id: string) { return perform(() => loadDeal(workspace, id)); }
 
 export async function saveDeal(workspace: string, input: DealInput, id?: string, expectedVersion?: number) {
