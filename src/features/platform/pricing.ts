@@ -1,11 +1,10 @@
 import { products, type Product } from "./types";
 
-// Values in cents. The four-module package totals R$ 150.00 per month.
+// Values in cents. The active product catalog currently has three modules.
 export const monthlyPrices: Record<Product, number> = {
   crm: 3300,
   financeiro: 3300,
   agenda: 4200,
-  prospeccao: 4200,
 };
 
 export function formatMonthlyPrice(cents: number) {

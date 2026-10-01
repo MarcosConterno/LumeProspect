@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function BuscarPage() {
-  redirect("/prospects?aba=buscar");
+  redirect("/configuracoes");
 }

@@ -1,5 +1,5 @@
 export const products = [
-  ["crm","CRM"],["financeiro","Financeiro"],["agenda","Agenda"],["prospeccao","Prospecção"],
+  ["crm","CRM"],["financeiro","Financeiro"],["agenda","Agenda"],
 ] as const;
 export type Product = typeof products[number][0];
 export type PlatformState = { error?: string; message?: string };

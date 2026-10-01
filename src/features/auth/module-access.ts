@@ -59,7 +59,7 @@ export async function hasModuleAccess(product: Product, operation: ModuleOperati
 
 export async function requireModule(product: Product, operation: ModuleOperation = "read") {
   const { context, access } = await getModuleState();
-  if (!access[product][operation]) redirect("/dashboard?denied=1");
+  if (!access[product][operation]) redirect("/configuracoes?denied=1");
   return context;
 }
 

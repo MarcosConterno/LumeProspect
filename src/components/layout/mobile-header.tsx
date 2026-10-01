@@ -9,7 +9,7 @@ export function MobileHeader({allowedModules,area="workspace"}:{allowedModules:s
   const pathname=usePathname();
   const items=area==="platform"?platformNavigation:filteredNavigation(allowedModules);
   return <header className="mobile-header">
-    <Brand href={area==="platform"?"/lume":"/dashboard"}/>
+    <Brand href={area==="platform"?"/lume":"/clientes"}/>
     <details key={pathname} className="mobile-menu">
       <summary aria-label="Abrir ou fechar menu"><span aria-hidden="true">☰</span><span>Menu</span></summary>
       <nav aria-label="Navegação mobile">

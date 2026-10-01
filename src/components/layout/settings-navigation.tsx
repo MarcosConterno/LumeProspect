@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 export function SettingsNavigation({canManageUsers,modules}:{canManageUsers:boolean;modules:string[]}) {
   const pathname=usePathname();
   const sections=[
-    ["Visão geral","/configuracoes"], ["Empresa","/configuracoes/empresa"],
+    ["Resumo","/configuracoes"], ["Empresa","/configuracoes/empresa"],
     ...(canManageUsers ? [["Usuários","/configuracoes/usuarios"]] : []),
     ...(modules.includes("financeiro") ? [["Financeiro","/configuracoes/financeiro"]] : []),
     ...(modules.includes("crm") ? [["CRM","/configuracoes/crm"],["Serviços","/configuracoes/servicos"]] : []),

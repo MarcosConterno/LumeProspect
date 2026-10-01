@@ -18,7 +18,7 @@ export function platformError(error: { code?: string; message?: string } | null)
 }
 export async function requireMaster() {
   const context = await getWorkspaceContext();
-  if (!context.isMaster) redirect("/dashboard");
+  if (!context.isMaster) redirect("/configuracoes");
   return context;
 }
 export async function loadPlatform(q: string, page: number) {
